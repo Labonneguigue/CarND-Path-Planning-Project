@@ -1,16 +1,20 @@
 
 #include <iostream>
 #include "pathplanner.h" // PathPlanner
-#include "utl.h"
 #include "spline.h"
 
-PathPlanner::PathPlanner()
+PathPlanner::PathPlanner(SensorFusion& sensorFusion,
+                         BehaviorPlanner& behaviorPlanner,
+                         TrajectoryGenerator& trajectoryGenerator)
+: mSensorFusion(sensorFusion)
+, mBehaviorPlanner(behaviorPlanner)
+, mTrajectoryGenerator(trajectoryGenerator)
 {}
 
 PathPlanner::~PathPlanner()
 {}
 
-void PathPlanner::solverPath(VehicleData vehicleData,
+void PathPlanner::solvePath(VehicleData vehicleData,
                              MapData mapData,
                              ControllerFeedback controllerFeedback,
                              std::vector<double>& next_x,
@@ -81,11 +85,11 @@ void PathPlanner::solverPath(VehicleData vehicleData,
 
     // Construction of 3 major waypoints at 30, 60 and 90 meters ahead of the car
     for (int wp = 30; wp <= 90 ; wp+= 30){
-        std::vector<double> next_wp = utl::getXY(vehicleData.s + wp,
-                                                  utl::getDFromLane(1),
-                                                  mapData.waypoints_s,
-                                                  mapData.waypoints_x,
-                                                  mapData.waypoints_y);
+        std::vector<double> next_wp = utl::getXY<double>(vehicleData.s + wp,
+                                                         utl::getDFromLane(1),
+                                                         mapData.waypoints_s,
+                                                         mapData.waypoints_x,
+                                                         mapData.waypoints_y);
         majorWayPoints_x.push_back(next_wp[0]);
         majorWayPoints_y.push_back(next_wp[1]);
 

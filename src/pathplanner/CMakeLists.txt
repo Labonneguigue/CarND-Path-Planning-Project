@@ -1,31 +1,35 @@
 # Set the project name
 #project(pathplanner)
 
-MESSAGE("Library : " ${PROJECT_NAME})
-
 # Bring my headers in the build environment
 include_directories(include)
 
 # Source variable with a link to all cpp files to compile
 set(SOURCES
+	# Main Component
     pathplanner.cpp
-    include/mapdata.h
     include/pathplanner.h
-    include/utl.h
+	# Behavior Planning sub-component
+    behaviorplanner.cpp
+    include/behaviorplanner.h
+	# Trajectory Generation sub-component
+    trajectorygenerator.cpp
+    include/trajectorygenerator.h
+	# Sensor Fusion sub-component
+    sensorfusion.cpp
+    include/sensorfusion.h
+	# Data Structures 
+    include/mapdata.h
     include/vehicledata.h
     include/controllerfeedback.h
+	# Helper functions/classes
     include/spline.h
-    include/sensorfusion.h
+    include/utl.h
 )
-
-set(HEADERS
-
-    )
 
 # Add a library with the above sources
 add_library(pathplanner SHARED ${SOURCES})
 
-MESSAGE(${PROJECT_SOURCE_DIR}/pathplanner/include)
 target_include_directories(pathplanner
     PUBLIC
     ${PROJECT_SOURCE_DIR}/pathplanner/include

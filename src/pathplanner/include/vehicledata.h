@@ -66,6 +66,15 @@ struct DetectedVehicleData : public VehicleData
         timeSinceLastUpdate = 0;
     }
 
+
+    /** Implementation of the operator< to enable sorting
+     *
+     */
+    bool operator < (const DetectedVehicleData& car) const
+    {
+        return (id < car.id);
+    }
+
 };
 
 #endif // VEHICLE_DATA_H
