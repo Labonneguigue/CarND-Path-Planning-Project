@@ -90,14 +90,24 @@ int main() {
           	// Previous path data given to the Planner
             std::vector<double> previous_path_x = j[1]["previous_path_x"];
           	std::vector<double> previous_path_y = j[1]["previous_path_y"];
-            std::cout << "Size of previous paths : " << previous_path_x.size() << " " << previous_path_y.size() << "\n";
+            //std::cout << "Size of previous paths : " << previous_path_x.size() << " " << previous_path_y.size() << "\n";
 
           	// Previous path's end s and d values
           	double end_path_s = j[1]["end_path_s"];
           	double end_path_d = j[1]["end_path_d"];
 
           	// Sensor Fusion Data, a list of all other cars on the same side of the road.
-          	auto sensor_fusion = j[1]["sensor_fusion"];
+            std::vector<std::vector<double>> sensor_fusion = j[1]["sensor_fusion"];
+            /* Each vector correspond to a car. Here is a list of all the data
+               provided for each of the detected surrounding cars.
+             0 - car's unique ID
+             1 - car's x position in map coordinates
+             2 - car's y position in map coordinates
+             3 - car's x velocity in m/s
+             4 - car's y velocity in m/s
+             5 - car's s position in frenet coordinates
+             6 - car's d position in frenet coordinates
+             */
 
           	json msgJson;
 
@@ -114,10 +124,19 @@ int main() {
             pathPlanner.solverPath(vehicleData, mapData, controllerFeedback, next_x_vals, next_y_vals);
 
             std::cout << "Current position " << car_x << " " << car_y << "\n";
-
+            std::cout << next_x_vals[0] << " " << next_y_vals[0] << utl::distance(next_x_vals[0],
+                                                                                  next_y_vals[0],
+                                                                                  car_x,
+                                                                                  car_y) << "\n";
             std::cout << "Next x / y : \n";
-            std::cout << next_x_vals[0] << " " << next_y_vals[0] << "\n";
-            std::cout << next_x_vals[1] << " " << next_y_vals[1] << "\n";
+            for (int i = 0 ; i < next_x_vals.size() ; ++i)
+            {
+                std::cout << next_x_vals[i] << " " << next_y_vals[i] << " " << utl::distance(next_x_vals[i],
+                                                                                             next_y_vals[i],
+                                                                                             next_x_vals[i-1],
+                                                                                             next_y_vals[i-1]) << "\n";
+            }
+            std::cout << "\n";
 
           	msgJson["next_x"] = next_x_vals;
           	msgJson["next_y"] = next_y_vals;

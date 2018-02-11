@@ -15,6 +15,7 @@ set(SOURCES
     include/vehicledata.h
     include/controllerfeedback.h
     include/spline.h
+    include/sensorfusion.h
 )
 
 set(HEADERS

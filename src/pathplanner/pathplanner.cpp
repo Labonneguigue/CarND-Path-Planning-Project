@@ -33,7 +33,7 @@ void PathPlanner::solverPath(VehicleData vehicleData,
     double endPathCar_y;
     double endPathCar_yaw;
 
-    std::cout << "Remaining path size : " << remainingPathSize << "\n";
+    //std::cout << "Remaining path size : " << remainingPathSize << "\n";
 
     if (remainingPathSize < 2)
     {
@@ -65,10 +65,16 @@ void PathPlanner::solverPath(VehicleData vehicleData,
 
         majorWayPoints_x.push_back(previousreference_x);
         majorWayPoints_y.push_back(previousreference_y);
+
+        // I start by adding to the planned path the ones resulting from
+        // previous iterations.
+        next_x = controllerFeedback.remainingPath_x;
+        next_y = controllerFeedback.remainingPath_y;
+
     }
 
-    std::cout << majorWayPoints_x[majorWayPoints_x.size()-2] << " " << majorWayPoints_y[majorWayPoints_y.size()-2] << "\n";
-    std::cout << majorWayPoints_x[majorWayPoints_x.size()-1] << " " << majorWayPoints_y[majorWayPoints_y.size()-1] << "\n";
+    //std::cout << majorWayPoints_x[majorWayPoints_x.size()-2] << " " << majorWayPoints_y[majorWayPoints_y.size()-2] << "\n";
+    //std::cout << majorWayPoints_x[majorWayPoints_x.size()-1] << " " << majorWayPoints_y[majorWayPoints_y.size()-1] << "\n";
 
     majorWayPoints_x.push_back(endPathCar_x);
     majorWayPoints_y.push_back(endPathCar_y);
@@ -83,8 +89,8 @@ void PathPlanner::solverPath(VehicleData vehicleData,
         majorWayPoints_x.push_back(next_wp[0]);
         majorWayPoints_y.push_back(next_wp[1]);
 
-        std::cout << wp << " " << majorWayPoints_x[majorWayPoints_x.size()-1]
-                        << " " << majorWayPoints_y[majorWayPoints_y.size()-1] << "\n";
+      /*  std::cout << wp << " " << majorWayPoints_x[majorWayPoints_x.size()-1]
+                        << " " << majorWayPoints_y[majorWayPoints_y.size()-1] << "\n";*/
     }
 
 
@@ -103,15 +109,11 @@ void PathPlanner::solverPath(VehicleData vehicleData,
                                (shift_y * cos(target_yaw-endPathCar_yaw));
     }
 
-    // I start by adding to the planned path the ones resulting from
-    // previous iterations.
-    next_x = controllerFeedback.remainingPath_x;
-    next_y = controllerFeedback.remainingPath_y;
-
+    /*
     for (int i = 0 ; i< next_x.size() ; i++)
     {
         std::cout << next_x[i] << " " << next_y[i] << "\n";
-    }
+    }*/
 
     tk::spline spline;
 
@@ -127,9 +129,9 @@ void PathPlanner::solverPath(VehicleData vehicleData,
 
     const double N = (target_distance / (0.02 * utl::mph2ms(mReferenceVelocityMph)));
     const double x_increment = target_x / N;
-    double x_position = x_increment;
+    double x_position = 0;
 
-    std::cout << "Spline position: \n";
+    //std::cout << "Spline position: \n";
 
     for (int wp = 1; wp <= (mNumbersOfWaypoints-remainingPathSize) ; ++wp)
     {
@@ -145,9 +147,14 @@ void PathPlanner::solverPath(VehicleData vehicleData,
 
         // Once this point is obtained, I modify its reference frame back to
         // the world reference frame.
-        next_x.push_back(endPathCar_x + (x * cos(endPathCar_yaw)) - (y * sin(endPathCar_yaw)));
-        next_y.push_back(endPathCar_y + (x * sin(endPathCar_yaw)) + (y * cos(endPathCar_yaw)));
+        const double nextWayPoint_x = endPathCar_x + (x * cos(endPathCar_yaw)) - (y * sin(endPathCar_yaw));
+        const double nextWayPoint_y = endPathCar_y + (x * sin(endPathCar_yaw)) + (y * cos(endPathCar_yaw));
+        if (next_y.size() > 0)
+            assert(utl::distance(nextWayPoint_x, nextWayPoint_y, next_x[next_x.size()-1], next_y[next_y.size()-1]) < 0.5);
 
-        std::cout << next_x[next_x.size()-1] << " " << next_y[next_y.size()-1] << "\n";
+        next_x.push_back(nextWayPoint_x);
+        next_y.push_back(nextWayPoint_y);
+
+        //std::cout << next_x[next_x.size()-1] << " " << next_y[next_y.size()-1] << "\n";
     }
 }

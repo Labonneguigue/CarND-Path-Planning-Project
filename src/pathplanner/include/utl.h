@@ -185,6 +185,19 @@ namespace utl
         static const double laneBias = 2;
         return (laneBias + (laneWidth * laneNumber));
     }
+
+    /**
+     Checks whether a car is in our lane or not
+
+     @param myLaneNumber Number of the lane I'm in: 0 is left, 1 is center and 2 is right lane
+     @param othercar_d Frenet d coordinate of the suspected car
+     @return True if the car is in my lane, False otherwise
+     */
+    bool isCarInMyLane(double myLaneNumber, double othercar_d)
+    {
+        return ((othercar_d < (getDFromLane(myLaneNumber) + 2)) &&
+                (othercar_d > (getDFromLane(myLaneNumber) - 2))) ? true : false;
+    }
 }
 
 #endif //UTL_H
