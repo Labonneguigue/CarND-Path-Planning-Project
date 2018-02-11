@@ -3,17 +3,19 @@
 #include "sensorfusion.h"
 
 SensorFusion::SensorFusion()
+: mCars()
+, mMyAV()
 {}
 
 SensorFusion::~SensorFusion()
 {}
 
-void SensorFusion::updateData(std::vector<std::vector<double>>& sensordata)
+void SensorFusion::updateCarsData(std::vector<std::vector<double>>& sensordata)
 {
-    if (cars.empty()){
+    if (mCars.empty()){
         for (int car = 0 ; car < sensordata.size() ; ++car)
         {
-            cars.push_back(DetectedVehicleData(sensordata[car][0],
+            mCars.push_back(DetectedVehicleData(sensordata[car][0],
                                                sensordata[car][1],
                                                sensordata[car][2],
                                                sensordata[car][3],
@@ -21,16 +23,16 @@ void SensorFusion::updateData(std::vector<std::vector<double>>& sensordata)
                                                sensordata[car][5],
                                                sensordata[car][6]));
         }
-        std::sort(cars.begin(), cars.end());
+        std::sort(mCars.begin(), mCars.end());
     }
     else
     {
         /// @todo: Merge new data with previous if it makes sense
         /// For now, it just overrides everything
-        cars.clear();
+        mCars.clear();
         for (int car = 0 ; car < sensordata.size() ; ++car)
         {
-            cars.push_back(DetectedVehicleData(sensordata[car][0],
+            mCars.push_back(DetectedVehicleData(sensordata[car][0],
                                                sensordata[car][1],
                                                sensordata[car][2],
                                                sensordata[car][3],
@@ -38,32 +40,40 @@ void SensorFusion::updateData(std::vector<std::vector<double>>& sensordata)
                                                sensordata[car][5],
                                                sensordata[car][6]));
         }
-        std::sort(cars.begin(), cars.end());
+        std::sort(mCars.begin(), mCars.end());
     }
-
 }
 
-bool SensorFusion::getDistanceAndSpeedCarAhead(double laneNumber,
-                                               double current_s,
-                                               double& distance,
+void SensorFusion::updateMyAVData(double x_,
+                                  double y_,
+                                  double s_,
+                                  double d_,
+                                  double yaw_,
+                                  double speed_)
+{
+    mMyAV.updateData(x_, y_, s_, d_, yaw_, speed_);
+}
+
+
+bool SensorFusion::getDistanceAndSpeedCarAhead(double& distance,
                                                double& speed)
 {
     bool found = false;
     distance = std::numeric_limits<double>::max();
     speed = std::numeric_limits<double>::max();
-    for (int car = 0; car < cars.size() ; car++)
+    for (int car = 0; car < mCars.size() ; car++)
     {
         // If the car is in my lane and its s is greater than mine,
         // I consider it
-        if (utl::isCarInMyLane(laneNumber, cars[car].d) &&
-           (cars[car].s > current_s))
+        if (utl::isCarInMyLane<double>(mMyAV.lane, mCars[car].d) &&
+           (mCars[car].s > mMyAV.s))
         {
             // If the distance between us is smaller that previously
             // recorded, it becomes the closest car to me.
-            if ((cars[car].s - current_s) < distance)
+            if ((mCars[car].s - mMyAV.s) < distance)
             {
-                distance = cars[car].s - current_s;
-                speed = sqrt(utl::sqr(cars[car].x_dot) + utl::sqr(cars[car].y_dot));
+                distance = mCars[car].s - mMyAV.s;
+                speed = sqrt(utl::sqr(mCars[car].x_dot) + utl::sqr(mCars[car].y_dot));
                 found = true;
                 assert(distance > 0);
             }

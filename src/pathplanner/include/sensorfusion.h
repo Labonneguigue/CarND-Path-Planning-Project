@@ -31,25 +31,46 @@ public:
      *       5 - car's s position in frenet coordinates
      *       6 - car's d position in frenet coordinates
      */
-    void updateData(std::vector<std::vector<double>>& sensordata);
+    void updateCarsData(std::vector<std::vector<double>>& sensordata);
+
+    /** Initialisation and update of myAV data.
+     *
+     */
+    void updateMyAVData(double x_,
+                        double y_,
+                        double s_,
+                        double d_,
+                        double yaw_,
+                        double speed_);
+
+    /** Returns a reference to myAV
+     *
+     */
+    VehicleData& myAV()
+    {
+        return mMyAV;
+    }
 
     /** Detects whether there is a car ahead or not, if it is the case
      *  the distance to that car is returned in the variable distance as
      *  well as its speed. The closest car is returned if multiple cars are
      *  detected ahead of us in the current lane.
      *
-     * @param[in] laneNumber Number of the lane to be checked (current vehicle lane)
-     * @param[in} current_s Frenet s coordinate of the car
+     * @note The number of the lane of myAV and its s Frenet coordinate are used
+     *       to compute the following results
+     *
      * @param[out] distance Distance to the car in front. max double if no car found
      * @param[out] speed Speed to the car in front. max double if no car found
      *
      * @return True if vehicle is ahead and the data in distance is correct, False otherwise
      */
-    bool getDistanceAndSpeedCarAhead(double laneNumber, double current_s, double& distance, double& speed);
+    bool getDistanceAndSpeedCarAhead(double& distance, double& speed);
 
 private:
 
-    std::vector<DetectedVehicleData> cars;
+    std::vector<DetectedVehicleData> mCars; ///< Vector of data about detected cars
+
+    VehicleData mMyAV; ///< Instance of my autonomous vehicle
 };
 
 #endif // SENSOR_FUSION_H

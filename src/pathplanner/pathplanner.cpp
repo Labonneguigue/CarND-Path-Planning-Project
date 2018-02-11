@@ -9,19 +9,34 @@ PathPlanner::PathPlanner(SensorFusion& sensorFusion,
 : mSensorFusion(sensorFusion)
 , mBehaviorPlanner(behaviorPlanner)
 , mTrajectoryGenerator(trajectoryGenerator)
+, mCurrentTargetVelocityMs(mMaximumVelocityMs)
 {}
 
 PathPlanner::~PathPlanner()
 {}
 
-void PathPlanner::solvePath(VehicleData vehicleData,
-                             MapData mapData,
-                             ControllerFeedback controllerFeedback,
-                             std::vector<double>& next_x,
-                             std::vector<double>& next_y){
+void PathPlanner::solvePath(MapData mapData,
+                            ControllerFeedback controllerFeedback,
+                            std::vector<double>& next_x,
+                            std::vector<double>& next_y){
     // Make sure the planned path is empty
     next_x.empty();
     next_y.empty();
+
+    double distanceCarAhead;
+    double speedCarAhead;
+    if (mSensorFusion.getDistanceAndSpeedCarAhead(distanceCarAhead, speedCarAhead))
+    {
+        if (distanceCarAhead < 50)
+        {
+            std::cout << "Car ahead closer than 50\n";
+            mCurrentTargetVelocityMs = speedCarAhead;
+        }
+    }
+    else
+    {
+        mCurrentTargetVelocityMs = mMaximumVelocityMs;
+    }
 
     // Vector of widely spaced waypoints to be interpolated with a spline
     // to smooth out the car trajectory
@@ -42,9 +57,9 @@ void PathPlanner::solvePath(VehicleData vehicleData,
     if (remainingPathSize < 2)
     {
         // If the remaing path is too small, I use the car as a starting reference
-        endPathCar_x = vehicleData.x;
-        endPathCar_y = vehicleData.y;
-        endPathCar_yaw = utl::deg2rad(vehicleData.yaw);
+        endPathCar_x = mSensorFusion.myAV().x;
+        endPathCar_y = mSensorFusion.myAV().y;
+        endPathCar_yaw = utl::deg2rad(mSensorFusion.myAV().yaw);
 
         // By adding the previous car position and the current one, I make sure that the
         // generated trajectory will be smooth since the spline runs through every
@@ -85,8 +100,8 @@ void PathPlanner::solvePath(VehicleData vehicleData,
 
     // Construction of 3 major waypoints at 30, 60 and 90 meters ahead of the car
     for (int wp = 30; wp <= 90 ; wp+= 30){
-        std::vector<double> next_wp = utl::getXY<double>(vehicleData.s + wp,
-                                                         utl::getDFromLane(1),
+        std::vector<double> next_wp = utl::getXY<double>(mSensorFusion.myAV().s + wp,
+                                                         utl::getDFromLane<double>(mSensorFusion.myAV().lane),
                                                          mapData.waypoints_s,
                                                          mapData.waypoints_x,
                                                          mapData.waypoints_y);
@@ -131,7 +146,7 @@ void PathPlanner::solvePath(VehicleData vehicleData,
 
     const double target_distance = sqrt(utl::sqr(target_x) + utl::sqr(target_y));
 
-    const double N = (target_distance / (0.02 * utl::mph2ms(mReferenceVelocityMph)));
+    const double N = (target_distance / (0.02 * mCurrentTargetVelocityMs));
     const double x_increment = target_x / N;
     double x_position = 0;
 

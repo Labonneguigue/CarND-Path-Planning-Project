@@ -37,7 +37,7 @@ int main() {
 
     // Instantiation of the classes requires to solve the path planning task
     SensorFusion sensorFusion = SensorFusion();
-    BehaviorPlanner behaviorPlanner = BehaviorPlanner();
+    BehaviorPlanner behaviorPlanner = BehaviorPlanner(sensorFusion);
     TrajectoryGenerator trajectoryGenerator = TrajectoryGenerator();
     PathPlanner pathPlanner = PathPlanner(sensorFusion, behaviorPlanner, trajectoryGenerator);
 
@@ -96,7 +96,7 @@ int main() {
         //cout << sdata << endl;
         if (length && length > 2 && data[0] == '4' && data[1] == '2') {
 
-            auto s = utl::hasData(data);
+            auto s = hasData(data);
 
             if (s != "") {
                 auto j = json::parse(s);
@@ -125,30 +125,20 @@ int main() {
 
                     // Sensor Fusion Data, a list of all other cars on the same side of the road.
                     std::vector<std::vector<double>> sensor_fusion_data = j[1]["sensor_fusion"];
-                    /* Each vector correspond to a car. Here is a list of all the data
-                     provided for each of the detected surrounding cars.
-                     0 - car's unique ID
-                     1 - car's x position in map coordinates
-                     2 - car's y position in map coordinates
-                     3 - car's x velocity in m/s
-                     4 - car's y velocity in m/s
-                     5 - car's s position in frenet coordinates
-                     6 - car's d position in frenet coordinates
-                     */
 
                     json msgJson;
 
                     vector<double> next_x_vals;
                     vector<double> next_y_vals;
 
-                    sensorFusion.updateData(sensor_fusion_data);
+                    sensorFusion.updateCarsData(sensor_fusion_data);
+                    sensorFusion.updateMyAVData(car_x, car_y, car_s, car_d, car_yaw, car_speed);
 
                     // @TODO: no intermediate variable, read json directly into structure
-                    VehicleData vehicleData(car_x, car_y, car_s, car_d, car_yaw, car_speed);
                     MapData mapData(map_waypoints_s, map_waypoints_x, map_waypoints_y);
                     ControllerFeedback controllerFeedback(previous_path_x, previous_path_y);
 
-                    pathPlanner.solvePath(vehicleData, mapData, controllerFeedback, next_x_vals, next_y_vals);
+                    pathPlanner.solvePath(mapData, controllerFeedback, next_x_vals, next_y_vals);
 
                     std::cout << "Current position " << car_x << " " << car_y << "\n";
                     std::cout << next_x_vals[0] << " " << next_y_vals[0] << utl::distance(next_x_vals[0],

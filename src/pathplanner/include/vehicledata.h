@@ -2,6 +2,7 @@
 #define VEHICLE_DATA_H
 
 #include <vector>
+#include "mapdata.h" // RoadLanes
 
 ///< @todo: Should be classes since data members are interdependant
 
@@ -12,17 +13,51 @@ struct VehicleData
     double s;
     double d;
     double yaw;
-    double speed;
+    double speed; ///< Effective car speed at the end of the planned path [mph]
+    RoadLanes lane; ///< Enum keeping track of the lane myAV is in
 
-    VehicleData(double x, double y, double s, double d, double yaw, double speed)
+    VehicleData()
+    : x(0)
+    , y(0)
+    , s(0)
+    , d(0)
+    , yaw()
+    , speed()
+    , lane(centerLane)
+    {}
+
+    VehicleData(double x,
+                double y,
+                double s,
+                double d,
+                double yaw,
+                double speed,
+                RoadLanes lane = centerLane)
     : x(x)
     , y(y)
     , s(s)
     , d(d)
     , yaw(yaw)
     , speed(speed)
+    , lane(lane)
     {}
-    
+
+    void updateData(double x_,
+                    double y_,
+                    double s_,
+                    double d_,
+                    double yaw_,
+                    double speed_)
+    {
+        x = x_;
+        y = y_;
+        s = s_;
+        d = d_;
+        yaw = yaw_;
+        speed = speed_;
+    }
+
+
 };
 
 struct DetectedVehicleData : public VehicleData

@@ -13,27 +13,31 @@ namespace utl
     }
 
     template <typename T>
-    T deg2rad(T x)
+    constexpr T deg2rad(T x)
     {
         return x * pi<T>() / 180;
     }
 
     template <typename T>
-    T rad2deg(double x)
+    constexpr T rad2deg(double x)
     {
         return x * 180 / pi<T>();
     }
 
     template <typename T>
-    T sqr(T x)
+    constexpr T sqr(T x)
     { return x*x; }
 
     template <typename T>
-    T mph2ms(T mph)
+    constexpr T mph2ms(T mph)
     { return mph*0.44704; }
 
     template <typename T>
-    T distance(T x1, T y1, T x2, T y2)
+    constexpr T ms2mph(T mph)
+    { return mph/0.44704; }
+
+    template <typename T>
+    constexpr T distance(T x1, T y1, T x2, T y2)
     {
         return sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
     }

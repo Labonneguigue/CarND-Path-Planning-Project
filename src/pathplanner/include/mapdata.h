@@ -4,6 +4,13 @@
 #include <vector>
 #include <cassert>
 
+enum RoadLanes
+{
+    leftLane = 0,
+    centerLane = 1,
+    rightLane = 2
+};
+
 struct MapData
 {
     std::vector<double> waypoints_s;
