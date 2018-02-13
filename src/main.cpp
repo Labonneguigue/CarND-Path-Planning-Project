@@ -44,7 +44,8 @@ int main() {
 
     // Instantiation of the classes requires to solve the path planning task
     SensorFusion sensorFusion = SensorFusion();
-    BehaviorPlanner behaviorPlanner = BehaviorPlanner(sensorFusion);
+    Predictor predictor = Predictor(sensorFusion);
+    BehaviorPlanner behaviorPlanner = BehaviorPlanner(predictor, sensorFusion);
     TrajectoryGenerator trajectoryGenerator = TrajectoryGenerator();
     PathPlanner pathPlanner = PathPlanner(sensorFusion, behaviorPlanner, trajectoryGenerator);
 

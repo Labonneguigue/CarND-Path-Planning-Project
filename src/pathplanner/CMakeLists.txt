@@ -15,9 +15,16 @@ set(SOURCES
 	# Trajectory Generation sub-component
     trajectorygenerator.cpp
     include/trajectorygenerator.h
+	# Prediction sub-component
+    predictor.cpp
+    include/predictor.h
 	# Sensor Fusion sub-component
     sensorfusion.cpp
     include/sensorfusion.h
+	# Road types
+    include/roadtypes.h
+	# Drinving Policy
+    include/drivingpolicy.h
 	# Data Structures 
     include/mapdata.h
     include/vehicledata.h

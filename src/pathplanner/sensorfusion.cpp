@@ -1,10 +1,12 @@
 #include <limits>
 #include <cassert>
 #include "sensorfusion.h"
+#include "drivingpolicy.h"
 
 SensorFusion::SensorFusion()
 : mCars()
 , mMyAV()
+, mHighway(policy::defaultNbLanes)
 {}
 
 SensorFusion::~SensorFusion()
@@ -16,30 +18,55 @@ void SensorFusion::updateCarsData(std::vector<std::vector<double>>& sensordata)
         for (int car = 0 ; car < sensordata.size() ; ++car)
         {
             mCars.push_back(DetectedVehicleData(sensordata[car][0],
-                                               sensordata[car][1],
-                                               sensordata[car][2],
-                                               sensordata[car][3],
-                                               sensordata[car][4],
-                                               sensordata[car][5],
-                                               sensordata[car][6]));
+                                                sensordata[car][1],
+                                                sensordata[car][2],
+                                                sensordata[car][3],
+                                                sensordata[car][4],
+                                                sensordata[car][5],
+                                                sensordata[car][6],
+                                                getVehicleLane(sensordata[car][6])));
         }
         std::sort(mCars.begin(), mCars.end());
     }
     else
     {
-        /// @todo: Merge new data with previous if it makes sense
-        /// For now, it just overrides everything
-        mCars.clear();
-        for (int car = 0 ; car < sensordata.size() ; ++car)
+        for (int newData = 0 ; newData < sensordata.size() ; ++newData)
         {
-            mCars.push_back(DetectedVehicleData(sensordata[car][0],
-                                               sensordata[car][1],
-                                               sensordata[car][2],
-                                               sensordata[car][3],
-                                               sensordata[car][4],
-                                               sensordata[car][5],
-                                               sensordata[car][6]));
+            bool found = false;
+            // Since the previous records are sorted, I iterate until
+            for (int previousRecord = 0 ; ((mCars[previousRecord].id <= sensordata[newData][0]) &&
+                                           (previousRecord < mCars.size()) &&
+                                           (!found)) ; ++previousRecord)
+            {
+                if (mCars[previousRecord].id == sensordata[newData][0])
+                {
+                    //Record exist, I update it.
+                    mCars[previousRecord].updateData(sensordata[newData][1],
+                                                     sensordata[newData][2],
+                                                     sensordata[newData][3],
+                                                     sensordata[newData][4],
+                                                     sensordata[newData][5],
+                                                     sensordata[newData][6],
+                                                     getVehicleLane(sensordata[newData][6]));
+                    //
+                    found = true;
+                }
+            }
+            if (!found)
+            {
+                //Record doesn't exist, I append it at the end
+                mCars.push_back(DetectedVehicleData(sensordata[newData][0],
+                                                    sensordata[newData][1],
+                                                    sensordata[newData][2],
+                                                    sensordata[newData][3],
+                                                    sensordata[newData][4],
+                                                    sensordata[newData][5],
+                                                    sensordata[newData][6],
+                                                    getVehicleLane(sensordata[newData][6])));
+
+            }
         }
+        // Finish merging, I sort it for nex time
         std::sort(mCars.begin(), mCars.end());
     }
 }
@@ -65,8 +92,8 @@ bool SensorFusion::getDistanceAndSpeedCarAhead(double& distance,
     {
         // If the car is in my lane and its s is greater than mine,
         // I consider it
-        if (utl::isCarInMyLane<double>(mMyAV.lane, mCars[car].d) &&
-           (mCars[car].s > mMyAV.s))
+        if (utl::isCarInLane<double>(mMyAV.lane, mCars[car].d) &&
+            (mCars[car].s > mMyAV.s))
         {
             // If the distance between us is smaller that previously
             // recorded, it becomes the closest car to me.
@@ -82,4 +109,14 @@ bool SensorFusion::getDistanceAndSpeedCarAhead(double& distance,
     return found;
 }
 
-
+Lane SensorFusion::getVehicleLane(const double d) const
+{
+    for (int lane = 0; lane < mHighway.getNumberLanes() ; ++lane)
+    {
+        if (utl::isCarInLane(lane, d))
+        {
+            return static_cast<Lane>(lane);
+        }
+    }
+    return undefined;
+}

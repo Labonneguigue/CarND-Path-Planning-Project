@@ -1,8 +1,9 @@
 #ifndef VEHICLE_DATA_H
 #define VEHICLE_DATA_H
 
+#include <chrono>
 #include <vector>
-#include "mapdata.h" // RoadLanes
+#include "roadtypes.h" // Lane
 
 ///< @todo: Should be classes since data members are interdependant
 
@@ -14,8 +15,11 @@ struct VehicleData
     double d;
     double yaw;
     double speed; ///< Effective car speed at the end of the planned path [mph]
-    RoadLanes lane; ///< Enum keeping track of the lane myAV is in
+    Lane lane; ///< Enum keeping track of the lane myAV is in
 
+    /** Default constructor
+     *
+     */
     VehicleData()
     : x(0)
     , y(0)
@@ -23,16 +27,19 @@ struct VehicleData
     , d(0)
     , yaw()
     , speed()
-    , lane(centerLane)
+    , lane(secondLane)
     {}
 
+    /** Constructor with non zero fields initialisation
+     *
+     */
     VehicleData(double x,
                 double y,
                 double s,
                 double d,
                 double yaw,
                 double speed,
-                RoadLanes lane = centerLane)
+                Lane lane = secondLane)
     : x(x)
     , y(y)
     , s(s)
@@ -42,6 +49,9 @@ struct VehicleData
     , lane(lane)
     {}
 
+    /** Update Data
+     *
+     */
     void updateData(double x_,
                     double y_,
                     double s_,
@@ -60,45 +70,58 @@ struct VehicleData
 
 };
 
+
+/** DetectedVehicleData structure
+ *
+ */
 struct DetectedVehicleData : public VehicleData
 {
     double id;
     double x_dot;
     double y_dot;
-    double timeSinceLastUpdate;
+    double d_dot; ///< Temporal derivative of d gives information on whether the car is changing lane or not
+    std::chrono::high_resolution_clock::time_point lastUpdateTimeStamp; ///< Timestamp set when the struct members are updated 
 
+    /** Constructor
+     *
+     */
     DetectedVehicleData(double id,
                         double x,
                         double y,
                         double x_dot,
                         double y_dot,
                         double s,
-                        double d)
-    : VehicleData(x, y, s, d, 0, 0)
+                        double d,
+                        Lane lane_)
+    : VehicleData(x, y, s, d, 0, 0, lane_)
     , id(id)
     , x_dot(x_dot)
     , y_dot(y_dot)
+    , d_dot(0)
     {}
 
-    void timeElapsed()
-    {
-        timeSinceLastUpdate++;
-    }
-
+    /** Update the data
+     *
+     * @note For now the only usefull data that needs to be tracked is d. The time derivative
+     *       of d gives the
+     */
     void updateData(double x_,
                     double y_,
                     double x_dot_,
                     double y_dot_,
                     double s_,
-                    double d_)
+                    double d_,
+                    Lane lane_)
     {
         x = x_;
         y = y_;
         x_dot = x_dot_;
         y_dot = y_dot_;
         s = s_;
+        d_dot = (d_ - d) / (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - lastUpdateTimeStamp).count() * 1000000);
+        lastUpdateTimeStamp = std::chrono::high_resolution_clock::now();
         d = d_;
-        timeSinceLastUpdate = 0;
+        lane = lane_;
     }
 
 

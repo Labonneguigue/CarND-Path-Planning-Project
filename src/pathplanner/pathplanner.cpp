@@ -23,6 +23,9 @@ void PathPlanner::solvePath(MapData mapData,
     next_x.empty();
     next_y.empty();
 
+    mBehaviorPlanner.updateState();
+
+    /*
     double distanceCarAhead;
     double speedCarAhead;
     if (mSensorFusion.getDistanceAndSpeedCarAhead(distanceCarAhead, speedCarAhead))
@@ -37,6 +40,7 @@ void PathPlanner::solvePath(MapData mapData,
     {
         mCurrentTargetVelocityMs = mMaximumVelocityMs;
     }
+     */
 
     // Vector of widely spaced waypoints to be interpolated with a spline
     // to smooth out the car trajectory

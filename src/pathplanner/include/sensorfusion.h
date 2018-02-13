@@ -2,6 +2,7 @@
 #define SENSOR_FUSION_H
 
 #include <vector>
+#include "roadtypes.h" //Highway
 #include "vehicledata.h"
 #include "utl.h"
 
@@ -51,6 +52,19 @@ public:
         return mMyAV;
     }
 
+    /** Returns a reference to the detected cars
+     *
+     */
+    const std::vector<DetectedVehicleData>& detectedCars() const
+    {
+        return mCars;
+    }
+
+    const Highway& highway() const
+    {
+        return mHighway;
+    }
+
     /** Detects whether there is a car ahead or not, if it is the case
      *  the distance to that car is returned in the variable distance as
      *  well as its speed. The closest car is returned if multiple cars are
@@ -66,11 +80,21 @@ public:
      */
     bool getDistanceAndSpeedCarAhead(double& distance, double& speed);
 
+    /** Returns the lane of a car given its d frenet component
+     *
+     * @param[in] d Frenet representation d component
+     * 
+     * @return Lane Enumerator identifying the lane. Returns undefined if fails.
+     */
+    Lane getVehicleLane(const double d) const;
+
 private:
 
     std::vector<DetectedVehicleData> mCars; ///< Vector of data about detected cars
 
     VehicleData mMyAV; ///< Instance of my autonomous vehicle
+
+    Highway mHighway; ///< Highway representation
 };
 
 #endif // SENSOR_FUSION_H
