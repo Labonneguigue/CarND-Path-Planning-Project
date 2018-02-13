@@ -1,6 +1,7 @@
 project(Path_Planning)
 
 add_subdirectory(pathplanner)
+add_subdirectory(profiler)
 #add_subdirectory(third-party-libraries)
 
 set(MAIN_SOURCES
@@ -22,7 +23,7 @@ find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 
 include_directories(${EIGEN3_INCLUDE_DIR} ${pathplanner_SOURCE_DIR})
 
-target_link_libraries(path_planning pathplanner z ssl uv uWS Eigen3::Eigen)
+target_link_libraries(path_planning pathplanner profiler z ssl uv uWS Eigen3::Eigen)
 
 
 #MESSAGE(${PROJECT_NAME})

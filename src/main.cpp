@@ -10,6 +10,8 @@
 #include "third-party-lib/json.hpp"
 #include "utl.h"
 #include "pathplanner.h" // PathPlanner
+#include "profiler.h"
+
 
 using namespace std;
 
@@ -34,6 +36,11 @@ std::string hasData(std::string s) {
 
 int main() {
     uWS::Hub h;
+
+    ofstream profilerOutputFile;
+    profilerOutputFile.open("../../../../profiler_output/codeprofile.txt");
+    // Can also pass std::cout as argument to print to the console
+    Profiler profiler(profilerOutputFile);
 
     // Instantiation of the classes requires to solve the path planning task
     SensorFusion sensorFusion = SensorFusion();
@@ -81,7 +88,8 @@ int main() {
     assert(map_waypoints_dx.size() > 0);
     assert(map_waypoints_dy.size() > 0);
 
-    h.onMessage([&sensorFusion,
+    h.onMessage([&profiler,
+                 &sensorFusion,
                  &pathPlanner,
                  &map_waypoints_x,
                  &map_waypoints_y,
@@ -89,6 +97,8 @@ int main() {
                  &map_waypoints_dx,
                  &map_waypoints_dy](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                                                                                                          uWS::OpCode opCode) {
+        profiler.start("Main Lambda function", 100);
+
         // "42" at the start of the message means there's a websocket message event.
         // The 4 signifies a websocket message
         // The 2 signifies a websocket event
@@ -138,8 +148,11 @@ int main() {
                     MapData mapData(map_waypoints_s, map_waypoints_x, map_waypoints_y);
                     ControllerFeedback controllerFeedback(previous_path_x, previous_path_y);
 
+                    profiler.start("Path Planner solvePath()");
                     pathPlanner.solvePath(mapData, controllerFeedback, next_x_vals, next_y_vals);
+                    profiler.stop("Path Planner solvePath()");
 
+                    /*
                     std::cout << "Current position " << car_x << " " << car_y << "\n";
                     std::cout << next_x_vals[0] << " " << next_y_vals[0] << utl::distance(next_x_vals[0],
                                                                                           next_y_vals[0],
@@ -154,6 +167,7 @@ int main() {
                                                                                                      next_y_vals[i-1]) << "\n";
                     }
                     std::cout << "\n";
+                    */
 
                     msgJson["next_x"] = next_x_vals;
                     msgJson["next_y"] = next_y_vals;
@@ -170,6 +184,9 @@ int main() {
                 ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
             }
         }
+
+        profiler.stop("Main Lambda function");
+
     });
     
     // We don't need this since we're not using HTTP but if it's removed the

@@ -27,9 +27,9 @@ void PathPlanner::solvePath(MapData mapData,
     double speedCarAhead;
     if (mSensorFusion.getDistanceAndSpeedCarAhead(distanceCarAhead, speedCarAhead))
     {
-        if (distanceCarAhead < 50)
+        if (distanceCarAhead < 25)
         {
-            std::cout << "Car ahead closer than 50\n";
+            std::cout << "Car ahead closer than 25\n";
             mCurrentTargetVelocityMs = speedCarAhead;
         }
     }
