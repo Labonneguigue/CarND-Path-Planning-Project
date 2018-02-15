@@ -10,6 +10,7 @@ PathPlanner::PathPlanner(SensorFusion& sensorFusion,
 , mBehaviorPlanner(behaviorPlanner)
 , mTrajectoryGenerator(trajectoryGenerator)
 , mCurrentTargetVelocityMs(mMaximumVelocityMs)
+, mMyAVSpeedAtEndOfPlannedPathMs(0)
 {}
 
 PathPlanner::~PathPlanner()
@@ -149,9 +150,6 @@ void PathPlanner::solvePath(MapData mapData,
     const double target_y = spline(target_x);
 
     const double target_distance = sqrt(utl::sqr(target_x) + utl::sqr(target_y));
-
-    const double N = (target_distance / (0.02 * mCurrentTargetVelocityMs));
-    const double x_increment = target_x / N;
     double x_position = 0;
 
     //std::cout << "Spline position: \n";
@@ -162,18 +160,42 @@ void PathPlanner::solvePath(MapData mapData,
         // N * 0.02 * v = d
         // Each planned waypoints are supposed to be reached every 0.02 seconds
         // The spacing between them is therefore crucial.
+        double stepSpeed = mMyAVSpeedAtEndOfPlannedPathMs;
+        std::cout << "Current speed : " << mMyAVSpeedAtEndOfPlannedPathMs << "\n";
+        
+        if ( (abs(mCurrentTargetVelocityMs - mMyAVSpeedAtEndOfPlannedPathMs) / 0.02) > mMaximumAccelerationMs )
+        {
+            stepSpeed += (mCurrentTargetVelocityMs > mMyAVSpeedAtEndOfPlannedPathMs) ? (0.02 * mMaximumAccelerationMs) : -(0.02 * mMaximumAccelerationMs);
+        }
+        else
+        {
+            stepSpeed = mCurrentTargetVelocityMs;
+        }
 
-        const double x = x_position + x_increment;
+        std::cout << "Step speed " << stepSpeed << " current target velocity : " << mCurrentTargetVelocityMs << "\n";
+
+        const double N = (target_distance / (0.02 * stepSpeed));
+        const double delta_d = target_x / N;
+
+        const double x = x_position + delta_d;
         const double y = spline(x);
 
         x_position = x;
+
+        // Update my speed for later planning and keep the acceleration bellow maximum
+        mMyAVSpeedAtEndOfPlannedPathMs = stepSpeed;
 
         // Once this point is obtained, I modify its reference frame back to
         // the world reference frame.
         const double nextWayPoint_x = endPathCar_x + (x * cos(endPathCar_yaw)) - (y * sin(endPathCar_yaw));
         const double nextWayPoint_y = endPathCar_y + (x * sin(endPathCar_yaw)) + (y * cos(endPathCar_yaw));
         if (next_y.size() > 0)
-            assert(utl::distance(nextWayPoint_x, nextWayPoint_y, next_x[next_x.size()-1], next_y[next_y.size()-1]) < 0.5);
+        {
+            if (utl::distance(nextWayPoint_x, nextWayPoint_y, next_x[next_x.size()-1], next_y[next_y.size()-1]) > 0.5)
+            {
+                std::cout << "WARNING : " << utl::distance(nextWayPoint_x, nextWayPoint_y, next_x[next_x.size()-1], next_y[next_y.size()-1]) << "\n";
+            }
+        }
 
         next_x.push_back(nextWayPoint_x);
         next_y.push_back(nextWayPoint_y);

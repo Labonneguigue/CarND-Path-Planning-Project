@@ -77,9 +77,9 @@ void Predictor::getLaneSpeedAndTimeToInsertion(const int lane,
     {
         if (mNearbyCars[car].lane == lane)
         {
-            if (mNearbyCars[car].speed < laneSpeedMs)
+            if (mNearbyCars[car].speedMs < laneSpeedMs)
             {
-                laneSpeedMs = mNearbyCars[car].speed;
+                laneSpeedMs = mNearbyCars[car].speedMs;
                 indexLastCar = car;
             }
             if (indexLastCar == -1)

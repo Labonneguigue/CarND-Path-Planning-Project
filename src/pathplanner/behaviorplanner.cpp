@@ -33,10 +33,10 @@ void BehaviorPlanner::updateState()
 
 void BehaviorPlanner::computeNewTrajectory()
 {
-    // Then, find best road bahavior
+    // Then, find best road behavior
     Highway highway = mSensorFusion.highway();
     const Lane currentLane = mSensorFusion.myAV().lane;
-    const int currentSpeed = mSensorFusion.myAV().speed;
+    const int currentSpeedMs = mSensorFusion.myAV().speedMs;
     std::vector<int> lanes = highway.getAvailableLanes(currentLane);
     std::vector<double> costs(lanes.size());
 
@@ -52,7 +52,7 @@ void BehaviorPlanner::computeNewTrajectory()
 
     for (int i = 0; i < lanes.size() ; ++i)
     {
-        costs[i] = cost(currentLane, currentSpeed, lanes[i]);
+        costs[i] = cost(currentLane, currentSpeedMs, lanes[i]);
         if (costs[i] < minimumCost)
         {
             minimumCost = costs[i];
@@ -69,7 +69,7 @@ void BehaviorPlanner::computeNewTrajectory()
 }
 
 double BehaviorPlanner::cost(const Lane currentLane,
-                             const double currentSpeed,
+                             const double currentSpeedMs,
                              const double targetLane) const
 {
     assert(currentLane >= 0);
@@ -82,10 +82,10 @@ double BehaviorPlanner::cost(const Lane currentLane,
     const double delta_d = (abs(targetD - targetLane) * 0.05) + 1.0;
     double cost;
 
-    double laneSpeed;
+    double laneSpeedMs;
     double timeToInsertion;
 
-    mPredictor.getLaneSpeedAndTimeToInsertion(targetLane, laneSpeed, timeToInsertion);
+    mPredictor.getLaneSpeedAndTimeToInsertion(targetLane, laneSpeedMs, timeToInsertion);
 
     /* Cost should be calculated as the time to target s:
         - the time to insertion
@@ -96,7 +96,7 @@ double BehaviorPlanner::cost(const Lane currentLane,
     // Idea: 0 cost would be acceleration to max speed and keep it until target.
 
     // Distance travelled while waiting for insertion, 0 if timeToInsertion is 0
-    const double sameLaneDistance = laneSpeed * timeToInsertion;
+    const double sameLaneDistance = laneSpeedMs * timeToInsertion;
 
     // Sanity check. If I have to wait for too long, this is not a good choice
     if (sameLaneDistance >= 150)
@@ -106,13 +106,13 @@ double BehaviorPlanner::cost(const Lane currentLane,
 
     // Distance travelled while ramping up or down the speed to lane speed
     constexpr static const double maximumSafeAcceleration = policy::getSafePolicy(policy::maxAccelerationMs);
-    const double timeToReachLaneSpeed = (laneSpeed - currentSpeed) / maximumSafeAcceleration;
+    const double timeToReachLaneSpeed = (laneSpeedMs - currentSpeedMs) / maximumSafeAcceleration;
     // s = v * t + 0.5 * a * t * t
-    const double rampDistance = (currentSpeed * timeToReachLaneSpeed) +
+    const double rampDistance = (currentSpeedMs * timeToReachLaneSpeed) +
                                 (0.5 * maximumSafeAcceleration * utl::sqr(timeToReachLaneSpeed));
 
     // v = d / t or t = d / v
-    double timeToReachTargetS = ((targetS - sameLaneDistance) - rampDistance) / laneSpeed;
+    double timeToReachTargetS = ((targetS - sameLaneDistance) - rampDistance) / laneSpeedMs;
     timeToReachTargetS *= delta_d;
 
     const double minimumCostTime = targetS / utl::mph2ms(policy::maxSpeedMph);

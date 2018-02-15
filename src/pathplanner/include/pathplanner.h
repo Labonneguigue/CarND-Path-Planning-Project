@@ -40,10 +40,10 @@ private:
 
     static constexpr double mCenterLane = 6; ///< Center Lane expressed in Frenet coordinates for d
     static constexpr double mNumbersOfWaypoints = 50; ///< Number of waypoints in the result path
-    static constexpr double mMaximumVelocityMs = utl::mph2ms(49.5); ///< Target velocity in mph @note 50 is the speed limit
-    double mMaximumAccelerationMs = 9; ///< Maximum allowed acceleration in m/s^2 @note 10 m/s is the required max
+    static constexpr double mMaximumVelocityMs = policy::getSafePolicy(utl::mph2ms(policy::maxSpeedMph)); ///< Target velocity in mph @note 50 is the speed limit
+    double mMaximumAccelerationMs = policy::getSafePolicy(policy::maxAccelerationMs); ///< Maximum allowed acceleration in m/s^2 @note 10 m/s is the required max
     double mCurrentTargetVelocityMs; ///< Ongoing velocity target in [m/s], influenced by induced behavior
-
+    double mMyAVSpeedAtEndOfPlannedPathMs; ///< Speed of my car at the end of the planned path in m/s.
 };
 
 #endif //PATH_PLANNER_H

@@ -16,7 +16,7 @@ struct VehicleData
     double s;
     double d;
     double yaw;
-    double speed; ///< Effective car speed at the end of the planned path [mph]
+    double speedMs; ///< Effective car speed [m/s]
     Lane lane; ///< Enum keeping track of the lane myAV is in
 
     /** Default constructor
@@ -28,27 +28,27 @@ struct VehicleData
     , s(0)
     , d(0)
     , yaw()
-    , speed()
+    , speedMs()
     , lane(secondLane)
     {}
 
     /** Constructor with non zero fields initialisation
      *
      */
-    VehicleData(double x,
-                double y,
-                double s,
-                double d,
-                double yaw,
-                double speed,
-                Lane lane = secondLane)
-    : x(x)
-    , y(y)
-    , s(s)
-    , d(d)
-    , yaw(yaw)
-    , speed(speed)
-    , lane(lane)
+    VehicleData(double x_,
+                double y_,
+                double s_,
+                double d_,
+                double yaw_,
+                double speedMs_,
+                Lane lane_ = secondLane)
+    : x(x_)
+    , y(y_)
+    , s(s_)
+    , d(d_)
+    , yaw(yaw_)
+    , speedMs(speedMs_)
+    , lane(lane_)
     {}
 
     /** Update Data
@@ -59,14 +59,14 @@ struct VehicleData
                     double s_,
                     double d_,
                     double yaw_,
-                    double speed_)
+                    double speedMs_)
     {
         x = x_;
         y = y_;
         s = s_;
         d = d_;
         yaw = yaw_;
-        speed = speed_;
+        speedMs = speedMs_;
     }
 
 
@@ -101,8 +101,6 @@ struct DetectedVehicleData : public VehicleData
     , y_dot(y_dot)
     , d_dot(0)
     {
-        std::cout << "New ";
-        print();
     }
 
     /** Update the data
@@ -125,13 +123,13 @@ struct DetectedVehicleData : public VehicleData
         y_dot = y_dot_;
         /*speed = (s_ - s) / (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - lastUpdateTimeStamp).count() * 1000000);
         lastUpdateTimeStamp = std::chrono::high_resolution_clock::now();*/
-        speed = utl::distance(x_dot_, y_dot, 0.0, 0.0);
+        speedMs = utl::distance(x_dot_, y_dot, 0.0, 0.0);
         s = s_;
         d_dot = (d_ - d) / (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - lastUpdateTimeStamp).count() * 1000000);
         lastUpdateTimeStamp = std::chrono::high_resolution_clock::now();
         d = d_;
         lane = lane_;
-        print();
+        //print();
     }
 
     bool hasBeenUpdatedRecently() const
@@ -154,9 +152,9 @@ struct DetectedVehicleData : public VehicleData
      */
     void print() const
     {
-        std::cout<< "Vehicle " << id << " x:" << x << " y:" << y << " speed:" << speed << " x_dot: " << x_dot
-                 << " y_dot" << y_dot << " s:" << s << " d:" << d << " d_dot:" << d_dot
-                 << " lane:" << lane << "\n";
+        std::cout<< "Vehicle " << id << " x:" << x << " y:" << y << " speed [m/s]:" << speedMs
+                 << " x_dot: " << x_dot << " y_dot" << y_dot << " s:" << s << " d:" << d
+                 << " d_dot:" << d_dot << " lane:" << lane << "\n";
     }
 
     /** Implementation of the operator< to enable sorting
