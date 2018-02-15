@@ -98,7 +98,7 @@ int main() {
                  &map_waypoints_dx,
                  &map_waypoints_dy](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                                                                                                          uWS::OpCode opCode) {
-        profiler.start("Main Lambda function", 100);
+        profiler.start("lambda", 100);
 
         // "42" at the start of the message means there's a websocket message event.
         // The 4 signifies a websocket message
@@ -142,16 +142,18 @@ int main() {
                     vector<double> next_x_vals;
                     vector<double> next_y_vals;
 
+                    profiler.start("SF update");
                     sensorFusion.updateCarsData(sensor_fusion_data);
                     sensorFusion.updateMyAVData(car_x, car_y, car_s, car_d, car_yaw, car_speed);
+                    profiler.stop("SF update");
 
                     // @TODO: no intermediate variable, read json directly into structure
                     MapData mapData(map_waypoints_s, map_waypoints_x, map_waypoints_y);
                     ControllerFeedback controllerFeedback(previous_path_x, previous_path_y);
 
-                    profiler.start("Path Planner solvePath()");
+                    profiler.start("solvePath");
                     pathPlanner.solvePath(mapData, controllerFeedback, next_x_vals, next_y_vals);
-                    profiler.stop("Path Planner solvePath()");
+                    profiler.stop("solvePath");
 
                     /*
                     std::cout << "Current position " << car_x << " " << car_y << "\n";
@@ -186,7 +188,7 @@ int main() {
             }
         }
 
-        profiler.stop("Main Lambda function");
+        profiler.stop("lambda");
 
     });
     

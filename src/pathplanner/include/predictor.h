@@ -44,7 +44,15 @@ public:
      */
     ~Predictor();
 
+    /**
+     *
+     */
     const bool anyWarnings(Warnings& warnings) const;
+
+    /**
+     *
+     */
+    void prepareSensorDataForPrediction();
 
     /** Lane speed is calculated as the slowest vehicle in the lane
      *  For vehicles behind me, I consider them only if I don't have
@@ -54,12 +62,12 @@ public:
      *  myself and the other cars.
      *
      * @param[in] lane Lane I want to know the speed of
-     * @param[out] laneSpeed The speed of the lane
-     * @param[out] timeToInsertion Time to wait in lane before changing in seconds
+     * @param[out] laneSpeedMs The speed of the lane in meters / second
+     * @param[out] timeToInsertionS Time to wait in lane before changing in seconds
      */
     void getLaneSpeedAndTimeToInsertion(const int lane,
-                                        double& laneSpeed,
-                                        double& timeToInsertion) const;
+                                        double& laneSpeedMs,
+                                        double& timeToInsertionS) const;
 
     /**
      *
@@ -75,6 +83,7 @@ public:
 private:
 
     SensorFusion& mSensorFusion;
+    std::vector<DetectedVehicleData> mNearbyCars;
 
     double mMaximumAccelerationMs = policy::getSafePolicy(policy::maxAccelerationMs); ///< Maximum allowed acceleration in m/s^2 @note 10
 };

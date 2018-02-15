@@ -52,14 +52,14 @@ public:
         return mMyAV;
     }
 
-    /** Returns a reference to the detected cars
+    /** Returns the detected cars updated with the last 500ms
      *
      */
-    const std::vector<DetectedVehicleData>& detectedCars() const
-    {
-        return mCars;
-    }
+    const std::vector<DetectedVehicleData> detectedCars() const;
 
+    /**
+     *
+     */
     const Highway& highway() const
     {
         return mHighway;

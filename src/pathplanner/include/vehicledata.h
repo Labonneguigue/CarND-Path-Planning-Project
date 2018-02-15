@@ -1,9 +1,11 @@
 #ifndef VEHICLE_DATA_H
 #define VEHICLE_DATA_H
 
+#include <iostream>
 #include <chrono>
 #include <vector>
 #include "roadtypes.h" // Lane
+#include "utl.h"
 
 ///< @todo: Should be classes since data members are interdependant
 
@@ -98,12 +100,16 @@ struct DetectedVehicleData : public VehicleData
     , x_dot(x_dot)
     , y_dot(y_dot)
     , d_dot(0)
-    {}
+    {
+        std::cout << "New ";
+        print();
+    }
 
     /** Update the data
      *
-     * @note For now the only usefull data that needs to be tracked is d. The time derivative
-     *       of d gives the
+     * @note By computing the time derivative of d and s I obtain the longitudinal 
+     *      velocity of the car as well as the lateral one. Both being very helpful
+     *      when I comes to deciding where to go on the road.
      */
     void updateData(double x_,
                     double y_,
@@ -117,13 +123,41 @@ struct DetectedVehicleData : public VehicleData
         y = y_;
         x_dot = x_dot_;
         y_dot = y_dot_;
+        /*speed = (s_ - s) / (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - lastUpdateTimeStamp).count() * 1000000);
+        lastUpdateTimeStamp = std::chrono::high_resolution_clock::now();*/
+        speed = utl::distance(x_dot_, y_dot, 0.0, 0.0);
         s = s_;
         d_dot = (d_ - d) / (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - lastUpdateTimeStamp).count() * 1000000);
         lastUpdateTimeStamp = std::chrono::high_resolution_clock::now();
         d = d_;
         lane = lane_;
+        print();
     }
 
+    bool hasBeenUpdatedRecently() const
+    {
+        /*static const double maxTimeForRecentUpdateMs = 500; /// Expressed in milliseconds
+        if ((std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - lastUpdateTimeStamp).count() * 1000) < 500)
+        {
+            return true;
+        }
+        return false;*/
+        if (lane != undefined)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    /** Print out the data of the data
+     *
+     */
+    void print() const
+    {
+        std::cout<< "Vehicle " << id << " x:" << x << " y:" << y << " speed:" << speed << " x_dot: " << x_dot
+                 << " y_dot" << y_dot << " s:" << s << " d:" << d << " d_dot:" << d_dot
+                 << " lane:" << lane << "\n";
+    }
 
     /** Implementation of the operator< to enable sorting
      *

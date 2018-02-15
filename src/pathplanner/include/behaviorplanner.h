@@ -4,6 +4,7 @@
 #include "predictor.h"
 #include "vehicledata.h"
 #include "sensorfusion.h"
+#include "drivingpolicy.h"
 
 class BehaviorPlanner
 {
@@ -21,14 +22,20 @@ public:
     ~BehaviorPlanner();
 
     /** Update the state of the vehicle using the SensorFusion data
-     *  being processed by the Predictor
+     *  being processed by the Predictor.
      *
      */
     void updateState();
 
+    /**
+     *
+     */
+    void computeNewTrajectory();
+
     /** Function evaluates the cost to choose each possible trajectory
      *
      * @param[in] currentLane The current lane myAV is on
+     * @param[in] currentSpeed The current myAV speed
      * @param[in] targetLane The target lane for which the cost is evaluated
      *
      * return double Cost to choose this trajectory
@@ -36,13 +43,13 @@ public:
      * @note The cost is bounded between 0 and 1. The lower the cost, the better
      *       the trajectory
      */
-    double cost(const double currentLane, const double targetLane) const;
+    double cost(const Lane currentLane, const double currentSpeed, const double targetLane) const;
 
 private:
     
     Predictor& mPredictor;
     SensorFusion& mSensorFusion;
-    
+    int mCounter;
 };
 
 #endif //BEHAVIOR_PLANNER_H

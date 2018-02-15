@@ -29,6 +29,10 @@ namespace utl
     { return x*x; }
 
     template <typename T>
+    constexpr T sigmoid(T x)
+    { return (1/(1+exp(-x))); }
+
+    template <typename T>
     constexpr T mph2ms(T mph)
     { return mph*0.44704; }
 

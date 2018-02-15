@@ -81,6 +81,18 @@ void SensorFusion::updateMyAVData(double x_,
     mMyAV.updateData(x_, y_, s_, d_, yaw_, speed_);
 }
 
+const std::vector<DetectedVehicleData> SensorFusion::detectedCars() const
+{
+    std::vector<DetectedVehicleData> recentlyDetectedCars;
+    for (int car=0; car < mCars.size() ; ++car)
+    {
+        if (mCars[car].hasBeenUpdatedRecently())
+        {
+            recentlyDetectedCars.push_back(mCars[car]);
+        }
+    }
+    return recentlyDetectedCars;
+}
 
 bool SensorFusion::getDistanceAndSpeedCarAhead(double& distance,
                                                double& speed)
