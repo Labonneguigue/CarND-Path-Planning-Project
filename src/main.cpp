@@ -46,7 +46,7 @@ int main() {
     SensorFusion sensorFusion = SensorFusion();
     Predictor predictor = Predictor(sensorFusion);
     BehaviorPlanner behaviorPlanner = BehaviorPlanner(predictor, sensorFusion);
-    TrajectoryGenerator trajectoryGenerator = TrajectoryGenerator();
+    TrajectoryGenerator trajectoryGenerator = TrajectoryGenerator(sensorFusion);
     PathPlanner pathPlanner = PathPlanner(sensorFusion, behaviorPlanner, trajectoryGenerator);
 
     // Load up map values for waypoint's x,y,s and d normalized normal std::vectors

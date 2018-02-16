@@ -13,6 +13,7 @@ namespace policy
     constexpr static const int maxSpeedMph = 50; ///< Maximum allowed speed in mph
 
     constexpr static const double safeMaxPolicyPercent = 0.95; ///< Returns percentage of the absolute limit that can be used to
+    constexpr static const double simulatorDeltaT = 0.02; ///< Each trajectory waypoints are met every 0.02seconds in the simulator
 
     template <typename T>
     constexpr int getSafePolicy(const T policy)

@@ -121,30 +121,19 @@ struct DetectedVehicleData : public VehicleData
         y = y_;
         x_dot = x_dot_;
         y_dot = y_dot_;
-        /*speed = (s_ - s) / (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - lastUpdateTimeStamp).count() * 1000000);
-        lastUpdateTimeStamp = std::chrono::high_resolution_clock::now();*/
         speedMs = utl::distance(x_dot_, y_dot, 0.0, 0.0);
         s = s_;
         d_dot = (d_ - d) / (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - lastUpdateTimeStamp).count() * 1000000);
         lastUpdateTimeStamp = std::chrono::high_resolution_clock::now();
         d = d_;
         lane = lane_;
-        //print();
+        if (hasBeenUpdatedRecently()) print();
     }
 
     bool hasBeenUpdatedRecently() const
     {
-        /*static const double maxTimeForRecentUpdateMs = 500; /// Expressed in milliseconds
-        if ((std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - lastUpdateTimeStamp).count() * 1000) < 500)
-        {
-            return true;
-        }
-        return false;*/
-        if (lane != undefined)
-        {
-            return true;
-        }
-        return false;
+        ///@todo Might need to change that
+        return (lane == undefined) ? false : true;
     }
 
     /** Print out the data of the data

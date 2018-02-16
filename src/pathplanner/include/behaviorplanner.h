@@ -10,6 +10,22 @@ class BehaviorPlanner
 {
 public:
 
+    enum Behavior
+    {
+        keepLane,
+        leftLaneChange,
+        rightLaneChange,
+        prepareLeftLaneChange,
+        prepareRightLaneChange
+    };
+
+    struct HighLevelTrajectoryReport
+    {
+        Behavior behavior;
+        double targetSpeed;
+        Lane targetLane;
+    };
+
     /** Default constructor
      *
      */
@@ -25,12 +41,12 @@ public:
      *  being processed by the Predictor.
      *
      */
-    void updateState();
+    const BehaviorPlanner::HighLevelTrajectoryReport& updateState();
 
     /**
      *
      */
-    void computeNewTrajectory();
+    void computeNewTrajectory(bool warnings);
 
     /** Function evaluates the cost to choose each possible trajectory
      *
@@ -49,7 +65,11 @@ private:
     
     Predictor& mPredictor;
     SensorFusion& mSensorFusion;
+
+    Predictor::Warnings mWarnings;
     int mCounter;
+
+    HighLevelTrajectoryReport mResults;
 };
 
 #endif //BEHAVIOR_PLANNER_H

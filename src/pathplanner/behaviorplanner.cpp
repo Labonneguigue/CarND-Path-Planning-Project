@@ -1,3 +1,4 @@
+#include <cmath>
 #include <limits>
 #include <iostream>
 #include <vector>
@@ -13,31 +14,43 @@ BehaviorPlanner::BehaviorPlanner(Predictor& predictor, SensorFusion& sensorFusio
 BehaviorPlanner::~BehaviorPlanner()
 {}
 
-void BehaviorPlanner::updateState()
+const BehaviorPlanner::HighLevelTrajectoryReport& BehaviorPlanner::updateState()
 {
     // First check if there are some warnings from the Prediction module
-    Predictor::Warnings warnings;
-    if (mPredictor.anyWarnings(warnings))
+    if (mPredictor.anyWarnings(mWarnings))
     {
         std::cout << "Warnings ! I run my Behavior Planner ...\n";
-        mCounter = 20;
-    }
-
-    ++mCounter;
-    if (mCounter >= 20)
-    {
-        computeNewTrajectory();
+        computeNewTrajectory(true);
         mCounter = 0;
     }
+    else
+    {
+        ++mCounter;
+        if (mCounter >= 20)
+        {
+            computeNewTrajectory(false);
+            mCounter = 0;
+        }
+    }
+    return mResults;
 }
 
-void BehaviorPlanner::computeNewTrajectory()
+void BehaviorPlanner::computeNewTrajectory(bool warnings)
 {
+    HighLevelTrajectoryReport result;
+    if (warnings)
+    {
+        result.targetSpeed = mWarnings.slowCarAheadSpeed;
+    }
+
     // Then, find best road behavior
     Highway highway = mSensorFusion.highway();
     const Lane currentLane = mSensorFusion.myAV().lane;
     const int currentSpeedMs = mSensorFusion.myAV().speedMs;
+
     std::vector<int> lanes = highway.getAvailableLanes(currentLane);
+    assert(lanes.size() > 0);
+
     std::vector<double> costs(lanes.size());
 
     // Get the Prediction module prepared to compute the cost functions
@@ -47,7 +60,7 @@ void BehaviorPlanner::computeNewTrajectory()
     double minimumCost = std::numeric_limits<double>::max();
 
 #if DEBUG
-    std::cout << "Behavior Planning on lane " << currentLane << "\n";
+    std::cout << "Behavior Planning on lane " << currentLane << " with s : " << mSensorFusion.myAV().s << "\n";
 #endif
 
     for (int i = 0; i < lanes.size() ; ++i)
@@ -79,7 +92,7 @@ double BehaviorPlanner::cost(const Lane currentLane,
     // Since there are no specific lane goal, I set it to be the current one so that
     // switching lane is (slightly) penalised.
     const int targetD = currentLane;
-    const double delta_d = (abs(targetD - targetLane) * 0.05) + 1.0;
+    const double delta_d = (std::abs(targetD - targetLane) * 0.05) + 1.0;
     double cost;
 
     double laneSpeedMs;
@@ -88,9 +101,9 @@ double BehaviorPlanner::cost(const Lane currentLane,
     mPredictor.getLaneSpeedAndTimeToInsertion(targetLane, laneSpeedMs, timeToInsertion);
 
     /* Cost should be calculated as the time to target s:
-        - the time to insertion
-        - the ramp up/down time from current speed to lane speed
-        - the current speed of the lane
+     - the time to insertion
+     - the ramp up/down time from current speed to lane speed
+     - the current speed of the lane
      */
 
     // Idea: 0 cost would be acceleration to max speed and keep it until target.
@@ -109,21 +122,21 @@ double BehaviorPlanner::cost(const Lane currentLane,
     const double timeToReachLaneSpeed = (laneSpeedMs - currentSpeedMs) / maximumSafeAcceleration;
     // s = v * t + 0.5 * a * t * t
     const double rampDistance = (currentSpeedMs * timeToReachLaneSpeed) +
-                                (0.5 * maximumSafeAcceleration * utl::sqr(timeToReachLaneSpeed));
+    (0.5 * maximumSafeAcceleration * utl::sqr(timeToReachLaneSpeed));
 
     // v = d / t or t = d / v
-    double timeToReachTargetS = ((targetS - sameLaneDistance) - rampDistance) / laneSpeedMs;
-    timeToReachTargetS *= delta_d;
+    double timeToReachTargetSAtFullSpeed = ((targetS - sameLaneDistance) - rampDistance) / laneSpeedMs;
+    timeToReachTargetSAtFullSpeed *= delta_d;
 
     const double minimumCostTime = targetS / utl::mph2ms(policy::maxSpeedMph);
+    const double totalTimeToReachTargetS = timeToInsertion + timeToReachLaneSpeed + timeToReachTargetSAtFullSpeed;
+    assert(totalTimeToReachTargetS > minimumCostTime);
 
-    assert(timeToReachTargetS > minimumCostTime);
-
-    cost = utl::sigmoid(timeToReachTargetS / minimumCostTime);
+    cost = utl::sigmoid(totalTimeToReachTargetS / minimumCostTime);
 
 #if DEBUG
     std::cout << "Cost of lane : " << targetLane << " is : " << cost << "\n";
 #endif
-
+    
     return cost;
 }

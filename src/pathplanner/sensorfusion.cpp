@@ -79,7 +79,7 @@ void SensorFusion::updateMyAVData(double x_,
                                   double speedmph)
 {
     const double speedms = utl::mph2ms(speedmph);
-    std::cout << "Update of the car speed ms : " << speedms << "\n";
+    //std::cout << "Update of the car speed ms : " << speedms << "\n";
     mMyAV.updateData(x_, y_, s_, d_, yaw_, speedms);
 }
 

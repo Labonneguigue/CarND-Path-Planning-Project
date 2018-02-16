@@ -20,6 +20,7 @@ public:
 
         bool slowCarAhead; ///< Flag a car detected in my lane and drives slower than me
         int slowCarAheadId;
+        double slowCarAheadSpeed;
 
         /** Default constructor
          *
@@ -86,6 +87,7 @@ private:
     std::vector<DetectedVehicleData> mNearbyCars;
 
     double mMaximumAccelerationMs = policy::getSafePolicy(policy::maxAccelerationMs); ///< Maximum allowed acceleration in m/s^2 @note 10
+    constexpr static const double mMaximumDetectionDistance = 70.0; ///< Distance below which I start to consider cars as being close and consider them into the Bahavior Planning task
 };
 
 #endif //PREDICTOR_H
