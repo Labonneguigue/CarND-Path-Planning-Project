@@ -127,9 +127,12 @@ struct DetectedVehicleData : public VehicleData
         lastUpdateTimeStamp = std::chrono::high_resolution_clock::now();
         d = d_;
         lane = lane_;
-        if (hasBeenUpdatedRecently()) print();
+        //if (hasBeenUpdatedRecently()) print();
     }
 
+    /** If the lane of the vehicle is undefined, then it hasn't got
+     * accurate data and shouldn't be considered.
+     */
     bool hasBeenUpdatedRecently() const
     {
         ///@todo Might need to change that

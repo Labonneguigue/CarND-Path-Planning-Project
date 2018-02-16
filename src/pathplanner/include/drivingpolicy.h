@@ -1,6 +1,7 @@
 #ifndef DRIVING_POLICY_H
 #define DRIVING_POLICY_H
 
+#include "utl.h"
 
 namespace policy
 {
@@ -11,6 +12,7 @@ namespace policy
     constexpr static const int detectionDistance = 40; ///< Distance at which behavior needs to start be modified
     constexpr static const int maxAccelerationMs = 10; ///< Maximum allowed acceleration in m/s
     constexpr static const int maxSpeedMph = 50; ///< Maximum allowed speed in mph
+    constexpr static const int maxSpeedMs = utl::mph2ms(maxSpeedMph); ///< Maximum allowed speed in m/s
 
     constexpr static const double safeMaxPolicyPercent = 0.95; ///< Returns percentage of the absolute limit that can be used to
     constexpr static const double simulatorDeltaT = 0.02; ///< Each trajectory waypoints are met every 0.02seconds in the simulator

@@ -22,8 +22,14 @@ public:
     struct HighLevelTrajectoryReport
     {
         Behavior behavior;
-        double targetSpeed;
+        double targetSpeedMs;
         Lane targetLane;
+
+        HighLevelTrajectoryReport()
+        : behavior(keepLane)
+        , targetSpeedMs(policy::getSafePolicy(policy::maxSpeedMs))
+        , targetLane(secondLane)
+        {}
     };
 
     /** Default constructor
@@ -63,13 +69,13 @@ public:
 
 private:
     
-    Predictor& mPredictor;
-    SensorFusion& mSensorFusion;
+    Predictor& mPredictor; ///< Instance of the Prediction sub-system
+    SensorFusion& mSensorFusion; ///< Instance of the SensorFusion database
 
-    Predictor::Warnings mWarnings;
-    int mCounter;
+    Predictor::Warnings mWarnings; ///< Current warnings raised
+    int mCounter; ///< Counter used for scheduling
 
-    HighLevelTrajectoryReport mResults;
+    HighLevelTrajectoryReport mResults; ///< Results to be given to the Trajectory Generation sub-module
 };
 
 #endif //BEHAVIOR_PLANNER_H

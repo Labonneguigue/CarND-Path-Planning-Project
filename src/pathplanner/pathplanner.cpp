@@ -18,6 +18,7 @@ void PathPlanner::solvePath(MapData mapData,
                             std::vector<double>& next_x,
                             std::vector<double>& next_y){
 
+    
     mTrajectoryGenerator.initialiseTrajectoryWithRemainingOne(controllerFeedback);
 
     BehaviorPlanner::HighLevelTrajectoryReport result = mBehaviorPlanner.updateState();

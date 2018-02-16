@@ -59,7 +59,7 @@ void Entry::print(std::ostream& outputStream)
                  << std::setw(15) << mNumberCalls << separator
                  << std::setw(15) << mCumulativeRuntime / 1000 << separator
                  << std::setw(15) << mMinimumRuntime << separator
-                 << std::setw(15) << mMinimumRuntime << separator
+                 << std::setw(15) << mMaximumRuntime << separator
                  << std::setw(15) << mCumulativeRuntime / mNumberCalls << separator
                  << std::endl;
 }

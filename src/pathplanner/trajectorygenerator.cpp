@@ -5,16 +5,27 @@
 #define VERBOSE 1
 
 TrajectoryGenerator::TrajectoryGenerator(SensorFusion& sensorFusion)
-: mSensorFusion(sensorFusion)
+: mSensorFusion(sensorFusion) //remove if not used
+, mMajorWayPoints_x(0)
+, mMajorWayPoints_y(0)
+, mPlannedTrajectory_x(0)
+, mPlannedTrajectory_y(0)
+, endPathCar_x(0)
+, endPathCar_y(0)
+, endPathCar_yaw(0)
 , mMyAVSpeedAtEndOfPlannedPathMs(0)
+, remainingPathSize(0)
 , mCurrentTargetVelocityMs(mMaximumVelocityMs)
-{}
+{
+    std::cout << "mCurrentTargetVelocityMs : " << mCurrentTargetVelocityMs << "\n";
+}
 
 TrajectoryGenerator::~TrajectoryGenerator()
 {}
 
 void TrajectoryGenerator::initialiseTrajectoryWithRemainingOne(ControllerFeedback& controllerFeedback)
 {
+    std::cout << "init : mCurrentTargetVelocityMs : " << mCurrentTargetVelocityMs << "\n";
     // Make sure the planned path is empty
     mPlannedTrajectory_x.empty();
     mPlannedTrajectory_y.empty();
@@ -80,7 +91,7 @@ void TrajectoryGenerator::computeTrajectory(BehaviorPlanner::HighLevelTrajectory
                                             std::vector<double>& next_y)
 {
     // Process the Trajectory Report
-    setCurrentTargetVelocity(result.targetSpeed);
+    setCurrentTargetVelocity(result.targetSpeedMs);
 
     // Construction of 3 major waypoints at 30, 60 and 90 meters ahead of the car
     for (int wp = 30; wp <= 90 ; wp+= 30)
@@ -172,7 +183,9 @@ void TrajectoryGenerator::computeTrajectory(BehaviorPlanner::HighLevelTrajectory
 
 void TrajectoryGenerator::computeStepSpeed()
 {
-    //std::cout << "Current speed : " << mMyAVSpeedAtEndOfPlannedPathMs << "\n";
+    std::cout << "Previous speed : " << mMyAVSpeedAtEndOfPlannedPathMs;
+
+    assert(mMyAVSpeedAtEndOfPlannedPathMs >= 0.0);
 
     if ( (std::abs(mCurrentTargetVelocityMs - mMyAVSpeedAtEndOfPlannedPathMs)
           / mSimulatorWaypointsDeltaT) > mMaximumAccelerationMs )
@@ -190,5 +203,6 @@ void TrajectoryGenerator::computeStepSpeed()
     {
         mMyAVSpeedAtEndOfPlannedPathMs = mCurrentTargetVelocityMs;
     }
-    //std::cout << "Step speed " << stepSpeed << " current target velocity : " << mCurrentTargetVelocityMs << "\n";
+
+    std::cout << " Updated speed : " << mMyAVSpeedAtEndOfPlannedPathMs << " current target velocity : " << mCurrentTargetVelocityMs << "\n";
 }

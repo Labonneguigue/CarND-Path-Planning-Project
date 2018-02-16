@@ -9,6 +9,9 @@
 BehaviorPlanner::BehaviorPlanner(Predictor& predictor, SensorFusion& sensorFusion)
 : mPredictor(predictor)
 , mSensorFusion(sensorFusion)
+, mWarnings()
+, mCounter(0)
+, mResults()
 {}
 
 BehaviorPlanner::~BehaviorPlanner()
@@ -40,7 +43,7 @@ void BehaviorPlanner::computeNewTrajectory(bool warnings)
     HighLevelTrajectoryReport result;
     if (warnings)
     {
-        result.targetSpeed = mWarnings.slowCarAheadSpeed;
+        result.targetSpeedMs = mWarnings.slowCarAheadSpeed;
     }
 
     // Then, find best road behavior
