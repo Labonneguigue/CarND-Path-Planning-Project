@@ -80,7 +80,7 @@ void SensorFusion::updateMyAVData(double x_,
 {
     const double speedms = utl::mph2ms(speedmph);
     //std::cout << "Update of the car speed ms : " << speedms << "\n";
-    mMyAV.updateData(x_, y_, s_, d_, yaw_, speedms);
+    mMyAV.updateData(x_, y_, s_, d_, yaw_, speedms, getVehicleLane(d_));
 }
 
 const std::vector<DetectedVehicleData> SensorFusion::detectedCars() const
@@ -106,7 +106,7 @@ bool SensorFusion::getDistanceAndSpeedCarAhead(double& distance,
     {
         // If the car is in my lane and its s is greater than mine,
         // I consider it
-        if (utl::isCarInLane<double>(mMyAV.lane, mCars[car].d) &&
+        if (Highway::isCarInLane<double>(mMyAV.lane, mCars[car].d) &&
             (mCars[car].s > mMyAV.s))
         {
             // If the distance between us is smaller that previously
@@ -125,11 +125,12 @@ bool SensorFusion::getDistanceAndSpeedCarAhead(double& distance,
 
 Lane SensorFusion::getVehicleLane(const double d) const
 {
-    for (int lane = 0; lane < mHighway.getNumberLanes() ; ++lane)
+    std::vector<Lane> lanes = mHighway.getAvailableLanes();
+    for (int lane = 0; lane < lanes.size() ; ++lane)
     {
-        if (utl::isCarInLane(lane, d))
+        if (Highway::isCarInLane<double>(lanes[lane], d))
         {
-            return static_cast<Lane>(lane);
+            return lanes[lane];
         }
     }
     return undefined;

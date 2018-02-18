@@ -1,7 +1,7 @@
+
 #include <cmath>
 #include <limits>
 #include <iostream>
-#include <vector>
 #include "behaviorplanner.h"
 
 #define DEBUG 1
@@ -10,65 +10,56 @@ BehaviorPlanner::BehaviorPlanner(Predictor& predictor, SensorFusion& sensorFusio
 : mPredictor(predictor)
 , mSensorFusion(sensorFusion)
 , mWarnings()
-, mCounter(0)
-, mResults()
-{}
+, mResults(std::vector<HighLevelTrajectoryReport>(mSensorFusion.highway().getNumberLanes()))
+, mResultIndex(static_cast<int>(mSensorFusion.highway().initialLane))
+{
+    for (int report = 0; report < mResults.size() ; ++report)
+    {
+        mResults[report].targetLane = static_cast<Lane>(report);
+    }
+}
 
 BehaviorPlanner::~BehaviorPlanner()
 {}
 
-const BehaviorPlanner::HighLevelTrajectoryReport& BehaviorPlanner::updateState()
-{
-    // First check if there are some warnings from the Prediction module
-    if (mPredictor.anyWarnings(mWarnings))
-    {
-        std::cout << "Warnings ! I run my Behavior Planner ...\n";
-        computeNewTrajectory(true);
-        mCounter = 0;
-    }
-    else
-    {
-        ++mCounter;
-        if (mCounter >= 20)
-        {
-            computeNewTrajectory(false);
-            mCounter = 0;
-        }
-    }
-    return mResults;
-}
 
-void BehaviorPlanner::computeNewTrajectory(bool warnings)
+const BehaviorPlanner::HighLevelTrajectoryReport BehaviorPlanner::computeNewTrajectory(Predictor::Warnings warnings)
 {
-    HighLevelTrajectoryReport result;
-    if (warnings)
-    {
-        result.targetSpeedMs = mWarnings.slowCarAheadSpeed;
-    }
+    // Set the warnings of each report to the be reflecting what the predictor found
+    setWarnings(warnings.anyWarningRaised);
 
     // Then, find best road behavior
-    Highway highway = mSensorFusion.highway();
+    const Highway highway = mSensorFusion.highway();
     const Lane currentLane = mSensorFusion.myAV().lane;
     const int currentSpeedMs = mSensorFusion.myAV().speedMs;
-
-    std::vector<int> lanes = highway.getAvailableLanes(currentLane);
-    assert(lanes.size() > 0);
-
+    std::vector<Lane> lanes = highway.getAvailableLanes();
     std::vector<double> costs(lanes.size());
-
-    // Get the Prediction module prepared to compute the cost functions
-    mPredictor.prepareSensorDataForPrediction();
-
     double minimumCostIndex = 0;
     double minimumCost = std::numeric_limits<double>::max();
+
+    assert(lanes.size() > 0);
 
 #if DEBUG
     std::cout << "Behavior Planning on lane " << currentLane << " with s : " << mSensorFusion.myAV().s << "\n";
 #endif
 
+    // Get the Prediction module prepared to compute the cost functions
+    mPredictor.prepareSensorDataForPrediction();
+
     for (int i = 0; i < lanes.size() ; ++i)
     {
-        costs[i] = cost(currentLane, currentSpeedMs, lanes[i]);
+        if (abs(currentLane - lanes[i]) >= 2)
+        {
+            costs[i] = 1;
+        }
+        else
+        {
+            costs[i] = cost(currentLane,
+                            currentSpeedMs,
+                            lanes[i],
+                            mWarnings,
+                            mResults[i]);
+        }
         if (costs[i] < minimumCost)
         {
             minimumCost = costs[i];
@@ -76,69 +67,131 @@ void BehaviorPlanner::computeNewTrajectory(bool warnings)
         }
     }
 
-#if DEBUG
     std::cout << "\n";
-#endif
 
-    // New target lane is minimumCostIndex;
-    mSensorFusion.myAV().lane = static_cast<Lane>(minimumCostIndex);
+    // New trajectory is minimumCostIndex;
+    return mResults[minimumCostIndex];
 }
+
+//void BehaviorPlanner::costPropagation(std::vector<double>& costs,
+//                                      const int lane){
+//    if ((lane > 0) && (lane < costs.size()))
+//        {
+//            costs[lane] =
+//}
 
 double BehaviorPlanner::cost(const Lane currentLane,
                              const double currentSpeedMs,
-                             const double targetLane) const
+                             const Lane targetLane,
+                             const Predictor::Warnings& warnings,
+                             HighLevelTrajectoryReport& report) const
 {
     assert(currentLane >= 0);
     assert(targetLane >= 0);
 
-    const double targetS = 200; // The cost function always aims at this far target
+    std::cout << "Cost calculation for lane : " << targetLane << "\n";
+
+    constexpr const double targetS = 300; // The cost function always aims at this far target
+
     // Since there are no specific lane goal, I set it to be the current one so that
     // switching lane is (slightly) penalised.
     const int targetD = currentLane;
-    const double delta_d = (std::abs(targetD - targetLane) * 0.05) + 1.0;
+    const double delta_d = (std::abs(targetD - targetLane) * 0.1) + 1.0;
     double cost;
-
     double laneSpeedMs;
-    double timeToInsertion;
-
-    mPredictor.getLaneSpeedAndTimeToInsertion(targetLane, laneSpeedMs, timeToInsertion);
-
-    /* Cost should be calculated as the time to target s:
-     - the time to insertion
-     - the ramp up/down time from current speed to lane speed
-     - the current speed of the lane
-     */
-
-    // Idea: 0 cost would be acceleration to max speed and keep it until target.
-
-    // Distance travelled while waiting for insertion, 0 if timeToInsertion is 0
-    const double sameLaneDistance = laneSpeedMs * timeToInsertion;
-
-    // Sanity check. If I have to wait for too long, this is not a good choice
-    if (sameLaneDistance >= 150)
-    {
-        return 1;
-    }
-
-    // Distance travelled while ramping up or down the speed to lane speed
-    constexpr static const double maximumSafeAcceleration = policy::getSafePolicy(policy::maxAccelerationMs);
-    const double timeToReachLaneSpeed = (laneSpeedMs - currentSpeedMs) / maximumSafeAcceleration;
-    // s = v * t + 0.5 * a * t * t
-    const double rampDistance = (currentSpeedMs * timeToReachLaneSpeed) +
-    (0.5 * maximumSafeAcceleration * utl::sqr(timeToReachLaneSpeed));
-
-    // v = d / t or t = d / v
-    double timeToReachTargetSAtFullSpeed = ((targetS - sameLaneDistance) - rampDistance) / laneSpeedMs;
-    timeToReachTargetSAtFullSpeed *= delta_d;
-
     const double minimumCostTime = targetS / utl::mph2ms(policy::maxSpeedMph);
-    const double totalTimeToReachTargetS = timeToInsertion + timeToReachLaneSpeed + timeToReachTargetSAtFullSpeed;
+    double totalTimeToReachTargetS;
+
+    // Target is maximum speed, might be reduced if cars are observed
+    report.targetSpeedMs = policy::getSafePolicy(policy::maxSpeedMs);
+
+    // 2 different approaches, one if the evaluated lane is my current lane,
+    // the other is if it is not.
+    if (currentLane == targetLane)
+    {
+        report.behavior = keepLane;
+        // If the lane evaluated is my current one, I only need to calculate the time to
+        // get to the target s at the speed of the car in front
+        // I take into account that I might have to slow down to reach the lane speed
+        if (warnings.slowCarAhead)
+        {
+            totalTimeToReachTargetS = targetS / warnings.slowCarAheadSpeed;
+            report.targetSpeedMs = warnings.slowCarAheadSpeed;
+        }
+        else
+        {
+            // If no car ahead, I consider my current speed
+            ///@todo improve
+            totalTimeToReachTargetS = targetS / policy::getSafePolicy(policy::maxSpeedMs);
+        }
+    }
+    else
+    {
+        mPredictor.getLaneSpeedAndTimeToInsertion(targetLane, laneSpeedMs, report.timeToInsertion);
+        /* Cost should be calculated as the time to target s:
+         - the time to insertion
+         - the ramp up/down time from current speed to lane speed
+         - the current speed of the lane
+         */
+
+        // Idea: 0 cost would be acceleration to max speed and keep it until target.
+
+        if (targetLane > currentLane)
+        {
+            if (report.timeToInsertion < 0.1)
+            {
+                report.behavior = rightLaneChange;
+            }
+            else
+            {
+                report.behavior = prepareRightLaneChange;
+            }
+        }
+        else if(targetLane < currentLane)
+        {
+            if (report.timeToInsertion < 0.1)
+            {
+                report.behavior = leftLaneChange;
+            }
+            else
+            {
+                report.behavior = prepareLeftLaneChange;
+            }
+        }
+
+        // Distance travelled while waiting for insertion, 0 if timeToInsertion is 0
+        const double sameLaneDistance = laneSpeedMs * report.timeToInsertion;
+
+        // Sanity check. If I have to wait for too long, this is not a good choice
+        if (sameLaneDistance >= 150)
+        {
+            return 1;
+        }
+
+        // Distance travelled while ramping up or down the speed to lane speed
+        constexpr static const double maximumSafeAcceleration = policy::getSafePolicy(policy::maxAccelerationMs);
+        const double timeToReachLaneSpeed = (laneSpeedMs - currentSpeedMs) / maximumSafeAcceleration;
+        // s = v * t + 0.5 * a * t * t
+        const double rampDistance = (currentSpeedMs * timeToReachLaneSpeed) +
+                        (0.5 * maximumSafeAcceleration * utl::sqr(timeToReachLaneSpeed));
+
+        std::cout << "ramp distance " << rampDistance << "\n";
+
+        // v = d / t or t = d / v
+        double timeToReachTargetSAtFullSpeed = ((targetS - sameLaneDistance) - rampDistance) / laneSpeedMs;
+        //std::cout << "timeToReachTargetSAtFullSpeed : " <<  timeToReachTargetSAtFullSpeed << "\n";
+        // Penalty for changing lane, prevents over changing
+        timeToReachTargetSAtFullSpeed *= delta_d;
+        
+        totalTimeToReachTargetS = report.timeToInsertion + timeToReachLaneSpeed + timeToReachTargetSAtFullSpeed;
+    }
+    //std::cout << "totalTimeToReachTargetS : " <<  totalTimeToReachTargetS << "\n";
     assert(totalTimeToReachTargetS > minimumCostTime);
 
     cost = utl::sigmoid(totalTimeToReachTargetS / minimumCostTime);
 
 #if DEBUG
-    std::cout << "Cost of lane : " << targetLane << " is : " << cost << "\n";
+    std::cout << "\t\tCost of lane : " << targetLane << " is : " << cost << "\n";
 #endif
     
     return cost;

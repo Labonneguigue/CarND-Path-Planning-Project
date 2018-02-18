@@ -3,17 +3,18 @@
 
 #include "predictor.h"
 
+#define DEBUG 0
 
 Predictor::Predictor(SensorFusion& sensorFusion)
 : mSensorFusion(sensorFusion)
+, mNearbyCars()
 {}
 
 Predictor::~Predictor()
 {}
 
-const bool Predictor::anyWarnings(Predictor::Warnings &warnings) const
+void Predictor::anyWarnings(Predictor::Warnings &warnings) const
 {
-    bool anyWarningRaised = false;
     // First, I check for slow car ahead
     double distanceCarAhead;
     double speedCarAhead;
@@ -21,10 +22,12 @@ const bool Predictor::anyWarnings(Predictor::Warnings &warnings) const
     {
         if (distanceCarAhead <= policy::detectionDistance)
         {
+#if DEBUG
             std::cout << "Car ahead closer than detectionDistance : " << policy::detectionDistance << "\n";
+#endif
             warnings.slowCarAhead = true;
             warnings.slowCarAheadSpeed = speedCarAhead;
-            anyWarningRaised = true;
+            warnings.anyWarningRaised = true;
         }
     }
 
@@ -34,8 +37,6 @@ const bool Predictor::anyWarnings(Predictor::Warnings &warnings) const
     {
 
     }
-
-    return anyWarningRaised;
 }
 
 void Predictor::prepareSensorDataForPrediction()
@@ -50,6 +51,7 @@ void Predictor::prepareSensorDataForPrediction()
                           cars[car].y) < mMaximumDetectionDistance){
             mNearbyCars.push_back(cars[car]);
         }
+        #if DEBUG
         else
         {
             std::cout << "Car too far, distance = " << utl::distance(mSensorFusion.myAV().x,
@@ -57,6 +59,7 @@ void Predictor::prepareSensorDataForPrediction()
                                                                      cars[car].x,
                                                                      cars[car].y) << "\n";
         }
+        #endif
     }
 }
 
@@ -75,14 +78,15 @@ void Predictor::getLaneSpeedAndTimeToInsertion(const int lane,
      Among the remaining ones, I find the slowest one below the speed
      I won't be able to exceed.
      */
-
-    std::cout << " Cars detected in my lane " << lane << " : ";
+#if DEBUG
+    std::cout << " -- Cars detected in my lane " << lane << " : ";
+#endif
 
     for (int car = 0; car < mNearbyCars.size() ; ++car)
     {
         if (mNearbyCars[car].lane == lane)
         {
-            std::cout << "Car " << mNearbyCars[car].id << " s : " << mNearbyCars[car].s << " | ";
+            std::cout << " -- Car " << mNearbyCars[car].id << " s : " << mNearbyCars[car].s << " speed : " <<  mNearbyCars[car].speedMs << " s_dot : " <<  mNearbyCars[car].s_dot << " | ";
             carsInTargetLane.push_back(mNearbyCars[car]);
             const double distance = utl::distance(mNearbyCars[car].x,
                                                   mNearbyCars[car].y,
@@ -98,27 +102,53 @@ void Predictor::getLaneSpeedAndTimeToInsertion(const int lane,
     if (!carsInTargetLane.empty())
     {
         std::cout << "\n";
-        // If indexLastCar has been set, at least one car has been detected
-        // I now consider that I might have to wait before switching lane
-        // To make this easy, I'll consider my speed to be constant
-        std::cout << "Closest car is " << carsInTargetLane[indexClosestCar].id;
-        if (carsInTargetLane[indexClosestCar].speedMs < mSensorFusion.myAV().speedMs)
+        bool safeToChangeLane = true;
+
+        for (int car = 0 ; car < carsInTargetLane.size() ; ++car)
         {
-            //I'll try to change lane in front of that car.
-            const double delta_s = mSensorFusion.myAV().s - carsInTargetLane[indexClosestCar].s;
-            timeToInsertionS = (policy::safeDistance - delta_s) /
-            (mSensorFusion.myAV().speedMs - carsInTargetLane[indexClosestCar].speedMs);
-            std::cout << " : insertion possible in : " << timeToInsertionS << "\n";
+            if ((carsInTargetLane[car].s < (mSensorFusion.myAV().s + policy::safeDistance))
+                && (carsInTargetLane[car].s >(mSensorFusion.myAV().s - policy::safeDistance)))
+            {
+                safeToChangeLane = false;
+                std::cout << " -- Car blocking me\n";
+            }
+
+            if (carsInTargetLane[car].s > (mSensorFusion.myAV().s - policy::safeDistance) &&
+                (carsInTargetLane[car].speedMs < laneSpeedMs))
+            {
+                laneSpeedMs = carsInTargetLane[car].speedMs;
+            }
+
+        }
+        if (safeToChangeLane)
+        {
+            std::cout << " -- Safe to change lane : " << lane << "\n";
+            timeToInsertionS = 0;
         }
         else
         {
-            std::cout << "\n";
-            timeToInsertionS = 20;
+            // If indexLastCar has been set, at least one car has been detected
+            // I now consider that I might have to wait before switching lane
+            // To make this easy, I'll consider my speed to be constant
+            std::cout << " -- Closest car is " << carsInTargetLane[indexClosestCar].id;
+            if (carsInTargetLane[indexClosestCar].speedMs < mSensorFusion.myAV().speedMs)
+            {
+                //I'll try to change lane in front of that car.
+                const double delta_s = mSensorFusion.myAV().s - carsInTargetLane[indexClosestCar].s;
+                timeToInsertionS = (policy::safeDistance - delta_s) /
+                (mSensorFusion.myAV().speedMs - carsInTargetLane[indexClosestCar].speedMs);
+                std::cout << " : insertion possible in : " << timeToInsertionS << "\n";
+            }
+            else
+            {
+                std::cout << "\n";
+                timeToInsertionS = 20;
+            }
         }
     }
     else
     {
-        std::cout << "None -> timeToInsertion is 0.\n";
+        std::cout << " -- None -> timeToInsertion is 0.\n";
     }
 }
 

@@ -2,7 +2,8 @@
 #include "spline.h"
 #include "trajectorygenerator.h"
 
-#define VERBOSE 1
+#define VERBOSE 0
+#define DEBUG 0
 
 TrajectoryGenerator::TrajectoryGenerator(SensorFusion& sensorFusion)
 : mSensorFusion(sensorFusion) //remove if not used
@@ -10,22 +11,19 @@ TrajectoryGenerator::TrajectoryGenerator(SensorFusion& sensorFusion)
 , mMajorWayPoints_y(0)
 , mPlannedTrajectory_x(0)
 , mPlannedTrajectory_y(0)
-, endPathCar_x(0)
-, endPathCar_y(0)
-, endPathCar_yaw(0)
-, mMyAVSpeedAtEndOfPlannedPathMs(0)
+, mEndPathCar(0, 0, 0, 0, 0, 0)
 , remainingPathSize(0)
 , mCurrentTargetVelocityMs(mMaximumVelocityMs)
+, mCurrentTargetLane(undefined)
 {
-    std::cout << "mCurrentTargetVelocityMs : " << mCurrentTargetVelocityMs << "\n";
+    //std::cout << "mCurrentTargetVelocityMs : " << mCurrentTargetVelocityMs << "\n";
 }
 
 TrajectoryGenerator::~TrajectoryGenerator()
 {}
 
-void TrajectoryGenerator::initialiseTrajectoryWithRemainingOne(ControllerFeedback& controllerFeedback)
+void TrajectoryGenerator::initialiseTrajectoryWithRemainingOne(const ControllerFeedback& controllerFeedback)
 {
-    std::cout << "init : mCurrentTargetVelocityMs : " << mCurrentTargetVelocityMs << "\n";
     // Make sure the planned path is empty
     mPlannedTrajectory_x.empty();
     mPlannedTrajectory_y.empty();
@@ -40,30 +38,30 @@ void TrajectoryGenerator::initialiseTrajectoryWithRemainingOne(ControllerFeedbac
     if (remainingPathSize < 2)
     {
         // If the remaing path is too small, I use the car as a starting reference
-        endPathCar_x = mSensorFusion.myAV().x;
-        endPathCar_y = mSensorFusion.myAV().y;
-        endPathCar_yaw = utl::deg2rad(mSensorFusion.myAV().yaw);
+        mEndPathCar.x = mSensorFusion.myAV().x;
+        mEndPathCar.y = mSensorFusion.myAV().y;
+        mEndPathCar.yaw = utl::deg2rad(mSensorFusion.myAV().yaw);
 
         // By adding the previous car position and the current one, I make sure that the
         // generated trajectory will be smooth since the spline runs through every
         // provided points.
-        mMajorWayPoints_x.push_back(endPathCar_x - cos(endPathCar_yaw));
-        mMajorWayPoints_y.push_back(endPathCar_y - sin(endPathCar_yaw));
+        mMajorWayPoints_x.push_back(mEndPathCar.x - cos(mEndPathCar.yaw));
+        mMajorWayPoints_y.push_back(mEndPathCar.y - sin(mEndPathCar.yaw));
     }
     else
     {
         // I use the previous path. The points closest to the car are the ones at the
         // end of the remainingPath.
         // I
-        endPathCar_x = controllerFeedback.remainingPath_x[remainingPathSize - 1];
-        endPathCar_y = controllerFeedback.remainingPath_y[remainingPathSize - 1];
+        mEndPathCar.x = controllerFeedback.remainingPath_x[remainingPathSize - 1];
+        mEndPathCar.y = controllerFeedback.remainingPath_y[remainingPathSize - 1];
 
         const double previousreference_x = controllerFeedback.remainingPath_x[remainingPathSize - 2];
         const double previousreference_y = controllerFeedback.remainingPath_y[remainingPathSize - 2];
 
         // I need to calculate the ending vehicle orientation (yaw)
-        endPathCar_yaw = atan2(endPathCar_y - previousreference_y,
-                               endPathCar_x - previousreference_x);
+        mEndPathCar.yaw = atan2(mEndPathCar.y - previousreference_y,
+                                mEndPathCar.x - previousreference_x);
 
         mMajorWayPoints_x.push_back(previousreference_x);
         mMajorWayPoints_y.push_back(previousreference_y);
@@ -80,24 +78,29 @@ void TrajectoryGenerator::initialiseTrajectoryWithRemainingOne(ControllerFeedbac
     std::cout << mMajorWayPoints_x[mMajorWayPoints_x.size()-1] << " " << mMajorWayPoints_y[mMajorWayPoints_y.size()-1] << "\n";
 #endif
 
-    mMajorWayPoints_x.push_back(endPathCar_x);
-    mMajorWayPoints_y.push_back(endPathCar_y);
+    mMajorWayPoints_x.push_back(mEndPathCar.x);
+    mMajorWayPoints_y.push_back(mEndPathCar.y);
 
 }
 
-void TrajectoryGenerator::computeTrajectory(BehaviorPlanner::HighLevelTrajectoryReport& result,
-                                            MapData& mapData,
+void TrajectoryGenerator::computeTrajectory(const BehaviorPlanner::HighLevelTrajectoryReport& result,
+                                            const MapData& mapData,
                                             std::vector<double>& next_x,
                                             std::vector<double>& next_y)
 {
     // Process the Trajectory Report
     setCurrentTargetVelocity(result.targetSpeedMs);
+    mCurrentTargetLane = result.targetLane;
+
+#if DEBUG
+    std::cout << "TrajectoryGenerator targets : speed \t" << mCurrentTargetVelocityMs << "\tlane :\t" << mCurrentTargetLane << "\n'";
+#endif
 
     // Construction of 3 major waypoints at 30, 60 and 90 meters ahead of the car
     for (int wp = 30; wp <= 90 ; wp+= 30)
     {
         std::vector<double> next_wp = utl::getXY<double>(mSensorFusion.myAV().s + wp,
-                                                         utl::getDFromLane<double>(mSensorFusion.myAV().lane),
+                                                         Highway::getDFromLane<double>(mCurrentTargetLane),
                                                          mapData.waypoints_s,
                                                          mapData.waypoints_x,
                                                          mapData.waypoints_y);
@@ -113,20 +116,14 @@ void TrajectoryGenerator::computeTrajectory(BehaviorPlanner::HighLevelTrajectory
     const double target_yaw = 0;
     for (int wp = 0 ; wp<mMajorWayPoints_x.size() ; ++wp)
     {
-        double shift_x = mMajorWayPoints_x[wp] - endPathCar_x;
-        double shift_y = mMajorWayPoints_y[wp] - endPathCar_y;
+        double shift_x = mMajorWayPoints_x[wp] - mEndPathCar.x;
+        double shift_y = mMajorWayPoints_y[wp] - mEndPathCar.y;
 
-        mMajorWayPoints_x[wp] = (shift_x * cos(target_yaw-endPathCar_yaw)) -
-        (shift_y * sin(target_yaw-endPathCar_yaw));
-        mMajorWayPoints_y[wp] = (shift_x * sin(target_yaw-endPathCar_yaw)) +
-        (shift_y * cos(target_yaw-endPathCar_yaw));
+        mMajorWayPoints_x[wp] = (shift_x * cos(target_yaw-mEndPathCar.yaw)) -
+        (shift_y * sin(target_yaw-mEndPathCar.yaw));
+        mMajorWayPoints_y[wp] = (shift_x * sin(target_yaw-mEndPathCar.yaw)) +
+        (shift_y * cos(target_yaw-mEndPathCar.yaw));
     }
-
-    /*
-     for (int i = 0 ; i< next_x.size() ; i++)
-     {
-     std::cout << next_x[i] << " " << next_y[i] << "\n";
-     }*/
 
     tk::spline spline;
 
@@ -150,7 +147,7 @@ void TrajectoryGenerator::computeTrajectory(BehaviorPlanner::HighLevelTrajectory
         // Each planned waypoints are supposed to be reached every 0.02 seconds
         // The spacing between them is therefore crucial.
         computeStepSpeed();
-        const double N = (target_distance / (mSimulatorWaypointsDeltaT * mMyAVSpeedAtEndOfPlannedPathMs));
+        const double N = (target_distance / (mSimulatorWaypointsDeltaT * mEndPathCar.speedMs));
         const double delta_d = target_x / N;
 
         const double x = x_position + delta_d;
@@ -160,8 +157,8 @@ void TrajectoryGenerator::computeTrajectory(BehaviorPlanner::HighLevelTrajectory
 
         // Once this point is obtained, I modify its reference frame back to
         // the world reference frame.
-        const double nextWayPoint_x = endPathCar_x + (x * cos(endPathCar_yaw)) - (y * sin(endPathCar_yaw));
-        const double nextWayPoint_y = endPathCar_y + (x * sin(endPathCar_yaw)) + (y * cos(endPathCar_yaw));
+        const double nextWayPoint_x = mEndPathCar.x + (x * cos(mEndPathCar.yaw)) - (y * sin(mEndPathCar.yaw));
+        const double nextWayPoint_y = mEndPathCar.y + (x * sin(mEndPathCar.yaw)) + (y * cos(mEndPathCar.yaw));
         if (next_y.size() > 0)
         {
             if (utl::distance(nextWayPoint_x, nextWayPoint_y, next_x[next_x.size()-1], next_y[next_y.size()-1]) > 0.5)
@@ -183,26 +180,26 @@ void TrajectoryGenerator::computeTrajectory(BehaviorPlanner::HighLevelTrajectory
 
 void TrajectoryGenerator::computeStepSpeed()
 {
-    std::cout << "Previous speed : " << mMyAVSpeedAtEndOfPlannedPathMs;
+    //std::cout << "Previous speed : " << mMyAVSpeedAtEndOfPlannedPathMs;
 
-    assert(mMyAVSpeedAtEndOfPlannedPathMs >= 0.0);
+    assert(mEndPathCar.speedMs >= 0.0);
 
-    if ( (std::abs(mCurrentTargetVelocityMs - mMyAVSpeedAtEndOfPlannedPathMs)
+    if ( (std::abs(mCurrentTargetVelocityMs - mEndPathCar.speedMs)
           / mSimulatorWaypointsDeltaT) > mMaximumAccelerationMs )
     {
-        if (mCurrentTargetVelocityMs > mMyAVSpeedAtEndOfPlannedPathMs)
+        if (mCurrentTargetVelocityMs > mEndPathCar.speedMs)
         {
-            mMyAVSpeedAtEndOfPlannedPathMs += mMaximumSpeedIncrement;
+            mEndPathCar.speedMs += mMaximumSpeedIncrement;
         }
         else
         {
-            mMyAVSpeedAtEndOfPlannedPathMs -= mMaximumSpeedIncrement;
+            mEndPathCar.speedMs -= mMaximumSpeedIncrement;
         }
     }
     else
     {
-        mMyAVSpeedAtEndOfPlannedPathMs = mCurrentTargetVelocityMs;
+        mEndPathCar.speedMs = mCurrentTargetVelocityMs;
     }
 
-    std::cout << " Updated speed : " << mMyAVSpeedAtEndOfPlannedPathMs << " current target velocity : " << mCurrentTargetVelocityMs << "\n";
+    //std::cout << " Updated speed : " << mMyAVSpeedAtEndOfPlannedPathMs << " current target velocity : " << mCurrentTargetVelocityMs << "\n";
 }

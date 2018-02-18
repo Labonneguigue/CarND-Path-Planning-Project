@@ -59,7 +59,8 @@ struct VehicleData
                     double s_,
                     double d_,
                     double yaw_,
-                    double speedMs_)
+                    double speedMs_,
+                    Lane lane_ = undefined)
     {
         x = x_;
         y = y_;
@@ -67,6 +68,11 @@ struct VehicleData
         d = d_;
         yaw = yaw_;
         speedMs = speedMs_;
+        if (lane_ != undefined)
+        {
+            //If not, that means I'm probably switching lanes
+            lane = lane_;
+        }
     }
 
 
@@ -81,6 +87,7 @@ struct DetectedVehicleData : public VehicleData
     double id;
     double x_dot;
     double y_dot;
+    double s_dot;
     double d_dot; ///< Temporal derivative of d gives information on whether the car is changing lane or not
     std::chrono::high_resolution_clock::time_point lastUpdateTimeStamp; ///< Timestamp set when the struct members are updated 
 
@@ -95,11 +102,12 @@ struct DetectedVehicleData : public VehicleData
                         double s,
                         double d,
                         Lane lane_)
-    : VehicleData(x, y, s, d, 0, 0, lane_)
+    : VehicleData(x, y, s, d, 0.0, 0.0, lane_)
     , id(id)
     , x_dot(x_dot)
     , y_dot(y_dot)
-    , d_dot(0)
+    , s_dot(0.0)
+    , d_dot(0.0)
     {
     }
 
@@ -122,6 +130,8 @@ struct DetectedVehicleData : public VehicleData
         x_dot = x_dot_;
         y_dot = y_dot_;
         speedMs = utl::distance(x_dot_, y_dot, 0.0, 0.0);
+        s_dot = (s_ - s) / (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - lastUpdateTimeStamp).count() * 1000000);
+        lastUpdateTimeStamp = std::chrono::high_resolution_clock::now();
         s = s_;
         d_dot = (d_ - d) / (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - lastUpdateTimeStamp).count() * 1000000);
         lastUpdateTimeStamp = std::chrono::high_resolution_clock::now();

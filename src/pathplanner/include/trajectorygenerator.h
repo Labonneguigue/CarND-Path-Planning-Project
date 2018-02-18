@@ -16,10 +16,28 @@ public:
 
     ~TrajectoryGenerator();
 
-    void initialiseTrajectoryWithRemainingOne(ControllerFeedback& controllerFeedback);
+    /** Initialise the trajectory using the remaining one (previously set by the
+     *  computeTrajectory() method) for reuse.
+     *
+     * @param[in] controllerFeedback Remaining trajectory as vector of x and y coordinates
+     *
+     */
+    void initialiseTrajectoryWithRemainingOne(const ControllerFeedback& controllerFeedback);
 
-    void computeTrajectory(BehaviorPlanner::HighLevelTrajectoryReport& result,
-                           MapData& mapData,
+    /** Compute the trajectory that the car should follow. The high level decisions
+     *  for this trajectory have been set by the Behavior Planning sub-module.
+     *  This method is responsible for generating a trajectory that is smooth,
+     *  doesn't exceed the maximum allowed jerk and acceleration and sensible
+     *  in an environment with other cars on the road.
+     *
+     * @param[in] result High level decision regarding the trajectory (speed,target lane, ..)
+     * @param[in] mapData Mapping data for self-localization on the highway
+     * @param[out] next_x Reference to a vector of the x coordinates of the planned path
+     * @param[out] next_y Reference to a vector of the y coordinates of the planned path
+     *
+     */
+    void computeTrajectory(const BehaviorPlanner::HighLevelTrajectoryReport& result,
+                           const MapData& mapData,
                            std::vector<double>& next_x,
                            std::vector<double>& next_y);
 
@@ -30,12 +48,20 @@ public:
      */
     void computeStepSpeed();
 
-    void setCurrentTargetVelocity(const double velocityMs)
+    /** Set the speed that my car should meet as soon as possible
+     *
+     * @note Ramping up and down my speed will be limited by the maximum
+     *       authorized acceleration and jerk.
+     *
+     * @param[in] velocityMs Target speed in m/s
+     *
+     */
+    inline void setCurrentTargetVelocity(const double velocityMs)
     { mCurrentTargetVelocityMs = velocityMs; }
 
 private:
 
-    SensorFusion& mSensorFusion;
+    SensorFusion& mSensorFusion; ///< Reference to the sensor fusion database
 
     // Vector of widely spaced waypoints to be interpolated with a spline
     // to smooth out the car trajectory
@@ -48,13 +74,12 @@ private:
     // I need to extend the planned path. The following car x, y, and yaw coordinates
     // are usefull to that regard. They'll be different depending on whether the
     // remaining planned path not yet executed by the controller is small or not.
-    double endPathCar_x;
-    double endPathCar_y;
-    double endPathCar_yaw;
-    double mMyAVSpeedAtEndOfPlannedPathMs; ///< Speed of my car at the end of the planned path in m/s.
+    VehicleData mEndPathCar;
+
     double remainingPathSize; ///< The difference with mNumberOfWaypoints gives the number of waypoints to compute and append to the trajectory
     double mCurrentTargetVelocityMs; ///< Ongoing velocity target in [m/s], influenced by induced behavior
-
+    Lane mCurrentTargetLane;
+    
     static constexpr double mMaximumAccelerationMs = policy::getSafePolicy(policy::maxAccelerationMs); ///< Maximum allowed acceleration in m/s^2 @note 10 m/s is the required max
     static constexpr const double mSimulatorWaypointsDeltaT = policy::simulatorDeltaT;
     static constexpr const double mMaximumSpeedIncrement = mSimulatorWaypointsDeltaT * mMaximumAccelerationMs;

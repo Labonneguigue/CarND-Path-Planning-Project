@@ -1,6 +1,8 @@
+
 #ifndef BEHAVIOR_PLANNER_H
 #define BEHAVIOR_PLANNER_H
 
+#include <vector>
 #include "predictor.h"
 #include "vehicledata.h"
 #include "sensorfusion.h"
@@ -19,16 +21,25 @@ public:
         prepareRightLaneChange
     };
 
+    /** Results of the Behavior Planning sub-module to be given to
+     *  the Trajectory Generation sub-module for precise path
+     *  definition
+     *
+     */
     struct HighLevelTrajectoryReport
     {
         Behavior behavior;
         double targetSpeedMs;
         Lane targetLane;
+        double timeToInsertion;
+        bool warningTriggered;
 
         HighLevelTrajectoryReport()
         : behavior(keepLane)
         , targetSpeedMs(policy::getSafePolicy(policy::maxSpeedMs))
         , targetLane(secondLane)
+        , timeToInsertion(0.0)
+        , warningTriggered(false)
         {}
     };
 
@@ -47,25 +58,37 @@ public:
      *  being processed by the Predictor.
      *
      */
-    const BehaviorPlanner::HighLevelTrajectoryReport& updateState();
-
-    /**
-     *
-     */
-    void computeNewTrajectory(bool warnings);
+    const BehaviorPlanner::HighLevelTrajectoryReport computeNewTrajectory(Predictor::Warnings warnings);
 
     /** Function evaluates the cost to choose each possible trajectory
      *
      * @param[in] currentLane The current lane myAV is on
      * @param[in] currentSpeed The current myAV speed
      * @param[in] targetLane The target lane for which the cost is evaluated
+     * @param[in] timeToInsertion The time to wait before changing lane
      *
      * return double Cost to choose this trajectory
      * 
      * @note The cost is bounded between 0 and 1. The lower the cost, the better
-     *       the trajectory
+     *       the trajectory. The time to insertion differentiate between a laneChange
+     *       and a prepareLaneChange type of behavior.
      */
-    double cost(const Lane currentLane, const double currentSpeed, const double targetLane) const;
+    double cost(const Lane currentLane,
+                const double currentSpeed,
+                const Lane targetLane,
+                const Predictor::Warnings& warnings,
+                HighLevelTrajectoryReport& report) const;
+
+    /**
+     *
+     */
+    inline void setWarnings(bool warningLevel)
+    {
+        for (int report = 0; report < mResults.size(); ++report)
+        {
+            mResults[report].warningTriggered = warningLevel;
+        }
+    }
 
 private:
     
@@ -73,9 +96,10 @@ private:
     SensorFusion& mSensorFusion; ///< Instance of the SensorFusion database
 
     Predictor::Warnings mWarnings; ///< Current warnings raised
-    int mCounter; ///< Counter used for scheduling
+    
 
-    HighLevelTrajectoryReport mResults; ///< Results to be given to the Trajectory Generation sub-module
+    std::vector<HighLevelTrajectoryReport> mResults; ///< Results to be given to the Trajectory Generation sub-module
+    int mResultIndex; ///< Index of the mResults vector that gives the best trajectory
 };
 
 #endif //BEHAVIOR_PLANNER_H

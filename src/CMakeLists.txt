@@ -30,6 +30,9 @@ add_executable(
     unit_tests
     tests/main_tests.cpp
     tests/profiler_tests.cpp
+    tests/utl_tests.cpp
+    tests/sensorfusion_tests.cpp
+    tests/behaviorplanner_tests.cpp
     )
 
 add_dependencies(unit_tests googletest)

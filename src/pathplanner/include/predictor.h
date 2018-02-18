@@ -15,6 +15,8 @@ public:
      */
     struct Warnings
     {
+        bool anyWarningRaised;
+
         bool carCrossingPlannedPath; ///< Flag a car which has started crossing our planned path
         int carCrossingPlannedPathId;
 
@@ -26,7 +28,8 @@ public:
          *
          */
         Warnings()
-        : carCrossingPlannedPath(false)
+        : anyWarningRaised(false)
+        , carCrossingPlannedPath(false)
         , slowCarAhead(false)
         {}
     };
@@ -48,7 +51,7 @@ public:
     /**
      *
      */
-    const bool anyWarnings(Warnings& warnings) const;
+    void anyWarnings(Warnings& warnings) const;
 
     /**
      *
@@ -83,11 +86,11 @@ public:
 
 private:
 
-    SensorFusion& mSensorFusion;
-    std::vector<DetectedVehicleData> mNearbyCars;
+    SensorFusion& mSensorFusion; ///< Instance of the Prediction sub-system
+    std::vector<DetectedVehicleData> mNearbyCars; /// Cars that are worth being taken into consideration when it comes to planning the trajectory
 
-    double mMaximumAccelerationMs = policy::getSafePolicy(policy::maxAccelerationMs); ///< Maximum allowed acceleration in m/s^2 @note 10
-    constexpr static const double mMaximumDetectionDistance = 70.0; ///< Distance below which I start to consider cars as being close and consider them into the Bahavior Planning task
+    constexpr static const double mMaximumAccelerationMs = policy::getSafePolicy(policy::maxAccelerationMs); ///< Maximum allowed acceleration in m/s^2 @note 10
+    constexpr static const double mMaximumDetectionDistance = 80.0; ///< Distance below which I start to consider cars as being close and consider them into the Bahavior Planning task
 };
 
 #endif //PREDICTOR_H

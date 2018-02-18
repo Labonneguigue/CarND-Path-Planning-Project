@@ -184,36 +184,6 @@ namespace utl
         return {x,y};
     }
 
-    /**
-     Returns the d component in the Frenet coordinates space for a particular lane
-
-     @param double laneNumber Lane number. 0 is left, 1 is center and 2 is right lane
-     @return d Frenet component
-     */
-    template <typename T>
-    T getDFromLane(T laneNumber)
-    {
-        static const T laneWidth = 4;
-        static const T laneBias = 2;
-        return (laneBias + (laneWidth * laneNumber));
-    }
-
-    /**
-     Checks whether a car is a specified lane or not
-
-     @param lane Number of the lane I'm in: 0 is left, 1 is center and 2 is right lane
-     @param othercar_d Frenet d coordinate of the suspected car
-     @return True if the car is in my lane, False otherwise
-     
-     @tparam T type of the othercar_d frenet coordinate
-     */
-    template <typename T>
-    bool isCarInLane(int lane, T othercar_d)
-    {
-        static const int halfLaneWidth = 2;
-        return ((othercar_d < (getDFromLane(lane) + halfLaneWidth)) &&
-                (othercar_d > (getDFromLane(lane) - halfLaneWidth))) ? true : false;
-    }
 }
 
 #endif //UTL_H
