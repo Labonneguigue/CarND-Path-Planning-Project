@@ -19,13 +19,10 @@ void PathPlanner::solvePath(MapData mapData,
                             std::vector<double>& next_x,
                             std::vector<double>& next_y){
 
-    // I initialise the path to the remaining one
-    mTrajectoryGenerator.initialiseTrajectoryWithRemainingOne(controllerFeedback);
-
     // I update to Predictor to build an up-to-date representation of the surroundings
     mPredictor.prepareSensorDataForPrediction();
 
-    // I check if there are any warning flags raised
+    // I check if there are any warning flags raised, if so I run the Behavior Planner module
     Predictor::Warnings warnings;
     if(warnings.anyWarningRaised)
     {
@@ -35,6 +32,7 @@ void PathPlanner::solvePath(MapData mapData,
     }
     else
     {
+        // If no warnings are raised, I run the behavior only once in a while
         ++mCounter;
         if (mCounter >= 20)
         {
@@ -42,6 +40,9 @@ void PathPlanner::solvePath(MapData mapData,
             mCounter = 0;
         }
     }
+
+    // I initialise the path to the remaining one
+    mTrajectoryGenerator.initialiseTrajectoryWithRemainingOne(controllerFeedback);
 
     // Using high level planning for the Behavior Planning module, I plan the new trajectory
     mTrajectoryGenerator.computeTrajectory(mResult, mapData, next_x, next_y);

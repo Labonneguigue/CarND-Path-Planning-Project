@@ -66,8 +66,8 @@ void TrajectoryGenerator::initialiseTrajectoryWithRemainingOne(const ControllerF
         mMajorWayPoints_x.push_back(previousreference_x);
         mMajorWayPoints_y.push_back(previousreference_y);
 
-        // I start by adding to the planned path the ones resulting from
-        // previous iterations.
+        // The beginning of the planned path will be the remaining ones from the
+        // last trajectory generation.
         mPlannedTrajectory_x = controllerFeedback.remainingPath_x;
         mPlannedTrajectory_y = controllerFeedback.remainingPath_y;
 

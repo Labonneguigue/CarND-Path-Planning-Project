@@ -100,7 +100,7 @@ bool SensorFusion::getDistanceAndSpeedCarAhead(double& distance,
                                                double& speed)
 {
     bool found = false;
-    distance = std::numeric_limits<double>::max();
+    distance = policy::detectionDistance;
     speed = std::numeric_limits<double>::max();
     for (int car = 0; car < mCars.size() ; car++)
     {

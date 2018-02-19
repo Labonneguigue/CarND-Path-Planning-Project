@@ -13,6 +13,7 @@ BehaviorPlanner::BehaviorPlanner(Predictor& predictor, SensorFusion& sensorFusio
 , mResults(std::vector<HighLevelTrajectoryReport>(mSensorFusion.highway().getNumberLanes()))
 , mResultIndex(static_cast<int>(mSensorFusion.highway().initialLane))
 {
+    // Initialisation of each HighLevelTrajectoryReports to have the correct targetLane
     for (int report = 0; report < mResults.size() ; ++report)
     {
         mResults[report].targetLane = static_cast<Lane>(report);
@@ -29,15 +30,12 @@ const BehaviorPlanner::HighLevelTrajectoryReport BehaviorPlanner::computeNewTraj
     setWarnings(warnings.anyWarningRaised);
 
     // Then, find best road behavior
-    const Highway highway = mSensorFusion.highway();
     const Lane currentLane = mSensorFusion.myAV().lane;
     const int currentSpeedMs = mSensorFusion.myAV().speedMs;
-    std::vector<Lane> lanes = highway.getAvailableLanes();
+    std::vector<Lane> lanes = mSensorFusion.highway().getAvailableLanes();
     std::vector<double> costs(lanes.size());
     double minimumCostIndex = 0;
     double minimumCost = std::numeric_limits<double>::max();
-
-    assert(lanes.size() > 0);
 
 #if DEBUG
     std::cout << "Behavior Planning on lane " << currentLane << " with s : " << mSensorFusion.myAV().s << "\n";
@@ -69,16 +67,8 @@ const BehaviorPlanner::HighLevelTrajectoryReport BehaviorPlanner::computeNewTraj
 
     std::cout << "\n";
 
-    // New trajectory is minimumCostIndex;
     return mResults[minimumCostIndex];
 }
-
-//void BehaviorPlanner::costPropagation(std::vector<double>& costs,
-//                                      const int lane){
-//    if ((lane > 0) && (lane < costs.size()))
-//        {
-//            costs[lane] =
-//}
 
 double BehaviorPlanner::cost(const Lane currentLane,
                              const double currentSpeedMs,
@@ -110,20 +100,14 @@ double BehaviorPlanner::cost(const Lane currentLane,
     if (currentLane == targetLane)
     {
         report.behavior = keepLane;
+        double distanceCarAhead;
+        mSensorFusion.getDistanceAndSpeedCarAhead(distanceCarAhead, laneSpeedMs);
         // If the lane evaluated is my current one, I only need to calculate the time to
         // get to the target s at the speed of the car in front
         // I take into account that I might have to slow down to reach the lane speed
-        if (warnings.slowCarAhead)
-        {
-            totalTimeToReachTargetS = targetS / warnings.slowCarAheadSpeed;
-            report.targetSpeedMs = warnings.slowCarAheadSpeed;
-        }
-        else
-        {
-            // If no car ahead, I consider my current speed
-            ///@todo improve
-            totalTimeToReachTargetS = targetS / policy::getSafePolicy(policy::maxSpeedMs);
-        }
+        laneSpeedMs = std::min<double>(laneSpeedMs, policy::getSafePolicy(policy::maxSpeedMs));
+        totalTimeToReachTargetS = targetS / laneSpeedMs;
+        report.targetSpeedMs = laneSpeedMs;
     }
     else
     {
@@ -185,7 +169,8 @@ double BehaviorPlanner::cost(const Lane currentLane,
         
         totalTimeToReachTargetS = report.timeToInsertion + timeToReachLaneSpeed + timeToReachTargetSAtFullSpeed;
     }
-    //std::cout << "totalTimeToReachTargetS : " <<  totalTimeToReachTargetS << "\n";
+
+    std::cout << "totalTimeToReachTargetS : " <<  totalTimeToReachTargetS << "\n";
     assert(totalTimeToReachTargetS > minimumCostTime);
 
     cost = utl::sigmoid(totalTimeToReachTargetS / minimumCostTime);

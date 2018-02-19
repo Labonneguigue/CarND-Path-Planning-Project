@@ -6,17 +6,7 @@
 #include "utl.h"
 #include "gtest/gtest.h"
 
-TEST(UTL_H_TESTS, isCarInLane_FirstLane)
+TEST(UTL_H_TESTS, ToBeDefined)
 {
-    const Lane lane = firstLane;
-    const int d = 0;
-    ASSERT_EQ(lane, Highway::isCarInLane(lane, d));
-
-}
-
-TEST(UTL_H_TESTS, isCarInLane_Undefined)
-{
-    const Lane lane = undefined;
-    const int d = 4;
-    ASSERT_EQ(lane, Highway::isCarInLane(lane, d));
+    ASSERT_TRUE(true);
 }

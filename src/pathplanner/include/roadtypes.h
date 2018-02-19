@@ -59,6 +59,7 @@ struct Highway
         {
             availableLanes.push_back(static_cast<Lane>(lane));
         }
+        assert(availableLanes.size() > 0);
         return availableLanes;
     }
 
