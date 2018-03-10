@@ -131,8 +131,8 @@ int main() {
                     //std::cout << "Size of previous paths : " << previous_path_x.size() << " " << previous_path_y.size() << "\n";
 
                     // Previous path's end s and d values
-                    double end_path_s = j[1]["end_path_s"];
-                    double end_path_d = j[1]["end_path_d"];
+                    //double end_path_s = j[1]["end_path_s"];
+                    //double end_path_d = j[1]["end_path_d"];
 
                     // Sensor Fusion Data, a list of all other cars on the same side of the road.
                     std::vector<std::vector<double>> sensor_fusion_data = j[1]["sensor_fusion"];

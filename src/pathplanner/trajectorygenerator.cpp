@@ -83,11 +83,15 @@ void TrajectoryGenerator::initialiseTrajectoryWithRemainingOne(const ControllerF
 
 }
 
-void TrajectoryGenerator::computeTrajectory(const BehaviorPlanner::HighLevelTrajectoryReport& result,
+void TrajectoryGenerator::computeTrajectory(const ControllerFeedback& controllerFeedback,
+                                            const BehaviorPlanner::HighLevelTrajectoryReport& result,
                                             const MapData& mapData,
                                             std::vector<double>& next_x,
                                             std::vector<double>& next_y)
 {
+    // I initialise the path to the remaining one
+    initialiseTrajectoryWithRemainingOne(controllerFeedback);
+
     // Process the Trajectory Report
     setCurrentTargetVelocity(result.targetSpeedMs);
     mCurrentTargetLane = result.targetLane;
@@ -97,7 +101,8 @@ void TrajectoryGenerator::computeTrajectory(const BehaviorPlanner::HighLevelTraj
 #endif
 
     // Construction of 3 major waypoints at 30, 60 and 90 meters ahead of the car
-    for (int wp = 30; wp <= 90 ; wp+= 30)
+    const double step = 50.0;
+    for (double wp = step; wp <= 3*step ; wp+= step)
     {
         std::vector<double> next_wp = utl::getXY<double>(mSensorFusion.myAV().s + wp,
                                                          Highway::getDFromLane<double>(mCurrentTargetLane),

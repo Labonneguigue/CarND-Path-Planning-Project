@@ -9,9 +9,10 @@ class Predictor
 {
 public:
 
-    /** Warnings structure allows to skip the behavior sub-component
-     *  to be called at each frame if there are nothing to react to.
-     *
+    /** Warnings structure allows to skip the call to the behavior planning
+     *  module if there is nothing to react to. The warning structure is kept
+     *  to a minimum purposefully and doesn't replace a full comprehension of
+     *  the surrounding environment.
      */
     struct Warnings
     {
@@ -51,7 +52,7 @@ public:
     /**
      *
      */
-    void anyWarnings(Warnings& warnings) const;
+    void environmentalEvaluation(Warnings& warnings) const;
 
     /**
      *

@@ -89,6 +89,7 @@ struct DetectedVehicleData : public VehicleData
     double y_dot;
     double s_dot;
     double d_dot; ///< Temporal derivative of d gives information on whether the car is changing lane or not
+    bool isChangingLane; ///< Flag raised when the car is detected to change lane
     std::chrono::high_resolution_clock::time_point lastUpdateTimeStamp; ///< Timestamp set when the struct members are updated 
 
     /** Constructor
@@ -108,6 +109,7 @@ struct DetectedVehicleData : public VehicleData
     , y_dot(y_dot)
     , s_dot(0.0)
     , d_dot(0.0)
+    , isChangingLane(false)
     {
     }
 
@@ -131,13 +133,24 @@ struct DetectedVehicleData : public VehicleData
         y_dot = y_dot_;
         speedMs = utl::distance(x_dot_, y_dot, 0.0, 0.0);
         s_dot = (s_ - s) / (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - lastUpdateTimeStamp).count() * 1000000);
-        lastUpdateTimeStamp = std::chrono::high_resolution_clock::now();
         s = s_;
         d_dot = (d_ - d) / (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - lastUpdateTimeStamp).count() * 1000000);
         lastUpdateTimeStamp = std::chrono::high_resolution_clock::now();
         d = d_;
         lane = lane_;
-        //if (hasBeenUpdatedRecently()) print();
+        constexpr const static double d_dotThreshold = 0.001;
+        if (d_dot > d_dotThreshold)
+        {
+            // change to ternary operator once threshold fine tuned
+            std::cout << "Car " << id << " is changing lane.\n";
+            isChangingLane = true;
+        }
+        else
+        {
+            isChangingLane = false;
+        }
+        
+        print();
     }
 
     /** If the lane of the vehicle is undefined, then it hasn't got

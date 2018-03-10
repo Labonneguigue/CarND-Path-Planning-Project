@@ -117,6 +117,7 @@ bool SensorFusion::getDistanceAndSpeedCarAhead(double& distance,
                 speed = sqrt(utl::sqr(mCars[car].x_dot) + utl::sqr(mCars[car].y_dot));
                 found = true;
                 assert(distance > 0);
+                std::cout << " ** Distance car ahead " << mCars[car].id << " is " << speed << "\n";
             }
         }
     }

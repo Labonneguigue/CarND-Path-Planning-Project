@@ -13,7 +13,7 @@ Predictor::Predictor(SensorFusion& sensorFusion)
 Predictor::~Predictor()
 {}
 
-void Predictor::anyWarnings(Predictor::Warnings &warnings) const
+void Predictor::environmentalEvaluation(Predictor::Warnings &warnings) const
 {
     // First, I check for slow car ahead
     double distanceCarAhead;
@@ -32,11 +32,19 @@ void Predictor::anyWarnings(Predictor::Warnings &warnings) const
     }
 
     // Second, I check whether there are cars crossing the planned path
-
-    ///@todo
+    std::vector<DetectedVehicleData> cars = mSensorFusion.detectedCars();
+    for (int car = 0; car < cars.size() ; ++car)
     {
-
+        if (cars[car].isChangingLane)
+        {
+            warnings.carCrossingPlannedPath = true;
+            // Early termination, the Behavior will be called and assess the situation
+            return;
+        }
     }
+    int * consistent = new int(5);
+
+    delete consistent;
 }
 
 void Predictor::prepareSensorDataForPrediction()

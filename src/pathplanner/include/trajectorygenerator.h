@@ -16,14 +16,6 @@ public:
 
     ~TrajectoryGenerator();
 
-    /** Initialise the trajectory using the remaining one (previously set by the
-     *  computeTrajectory() method) for reuse.
-     *
-     * @param[in] controllerFeedback Remaining trajectory as vector of x and y coordinates
-     *
-     */
-    void initialiseTrajectoryWithRemainingOne(const ControllerFeedback& controllerFeedback);
-
     /** Compute the trajectory that the car should follow. The high level decisions
      *  for this trajectory have been set by the Behavior Planning sub-module.
      *  This method is responsible for generating a trajectory that is smooth,
@@ -36,10 +28,22 @@ public:
      * @param[out] next_y Reference to a vector of the y coordinates of the planned path
      *
      */
-    void computeTrajectory(const BehaviorPlanner::HighLevelTrajectoryReport& result,
+    void computeTrajectory(const ControllerFeedback& controllerFeedback,
+                           const BehaviorPlanner::HighLevelTrajectoryReport& result,
                            const MapData& mapData,
                            std::vector<double>& next_x,
                            std::vector<double>& next_y);
+
+private:
+    
+    /** Initialise the trajectory using the remaining one (previously set by the
+     *  computeTrajectory() method) for reuse.
+     *
+     * @param[in] controllerFeedback Remaining trajectory as vector of x and y coordinates
+     *
+     */
+    void initialiseTrajectoryWithRemainingOne(const ControllerFeedback& controllerFeedback);
+
 
     /** In order to avoid |accelerating| too much, the speed of the car must
      * be carefully and incrementally changed
@@ -58,8 +62,6 @@ public:
      */
     inline void setCurrentTargetVelocity(const double velocityMs)
     { mCurrentTargetVelocityMs = velocityMs; }
-
-private:
 
     SensorFusion& mSensorFusion; ///< Reference to the sensor fusion database
 

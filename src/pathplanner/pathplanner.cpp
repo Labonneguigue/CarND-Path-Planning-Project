@@ -24,6 +24,7 @@ void PathPlanner::solvePath(MapData mapData,
 
     // I check if there are any warning flags raised, if so I run the Behavior Planner module
     Predictor::Warnings warnings;
+    //mPredictor.environmentalEvaluation(warnings);
     if(warnings.anyWarningRaised)
     {
         std::cout << "Warnings ! I run my Behavior Planner ...\n";
@@ -41,10 +42,8 @@ void PathPlanner::solvePath(MapData mapData,
         }
     }
 
-    // I initialise the path to the remaining one
-    mTrajectoryGenerator.initialiseTrajectoryWithRemainingOne(controllerFeedback);
-
-    // Using high level planning for the Behavior Planning module, I plan the new trajectory
-    mTrajectoryGenerator.computeTrajectory(mResult, mapData, next_x, next_y);
+    // Using high level planning from the Behavior Planning module, the remaining planned path
+    // and the mapping data, I plan the new trajectory
+    mTrajectoryGenerator.computeTrajectory(controllerFeedback, mResult, mapData, next_x, next_y);
 
 }
