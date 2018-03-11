@@ -78,7 +78,7 @@ void Predictor::getLaneSpeedAndTimeToInsertion(const int lane,
     laneSpeedMs = utl::mph2ms(policy::maxSpeedMph);
     timeToInsertionS = 0;
     std::vector<DetectedVehicleData> carsInTargetLane;
-    int indexClosestCar; //Index in the carsInTargetLane vector;
+    int indexClosestCar = -1; //Index in the carsInTargetLane vector;
     double closestDistance = std::numeric_limits<double>::max();
 
     /* For each of the surrounding cars, I'll check only the cars in the
@@ -138,6 +138,7 @@ void Predictor::getLaneSpeedAndTimeToInsertion(const int lane,
             // If indexLastCar has been set, at least one car has been detected
             // I now consider that I might have to wait before switching lane
             // To make this easy, I'll consider my speed to be constant
+            assert(indexClosestCar >= 0);
             std::cout << " -- Closest car is " << carsInTargetLane[indexClosestCar].id;
             if (carsInTargetLane[indexClosestCar].speedMs < mSensorFusion.myAV().speedMs)
             {
@@ -162,10 +163,12 @@ void Predictor::getLaneSpeedAndTimeToInsertion(const int lane,
 
 const bool Predictor::isCarTooFarBehind(const DetectedVehicleData car) const
 {
+    ///@todo: Implement and use
     return true;
 }
 
 const bool Predictor::isCarTooFarAhead(const DetectedVehicleData car) const
 {
+    ///@todo: Implement and use
     return false;
 }

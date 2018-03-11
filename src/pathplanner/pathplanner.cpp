@@ -14,8 +14,7 @@ PathPlanner::PathPlanner(BehaviorPlanner& behaviorPlanner,
 PathPlanner::~PathPlanner()
 {}
 
-void PathPlanner::solvePath(MapData mapData,
-                            ControllerFeedback controllerFeedback,
+void PathPlanner::solvePath(ControllerFeedback controllerFeedback,
                             std::vector<double>& next_x,
                             std::vector<double>& next_y){
 
@@ -44,6 +43,6 @@ void PathPlanner::solvePath(MapData mapData,
 
     // Using high level planning from the Behavior Planning module, the remaining planned path
     // and the mapping data, I plan the new trajectory
-    mTrajectoryGenerator.computeTrajectory(controllerFeedback, mResult, mapData, next_x, next_y);
+    mTrajectoryGenerator.computeTrajectory(controllerFeedback, mResult, next_x, next_y);
 
 }

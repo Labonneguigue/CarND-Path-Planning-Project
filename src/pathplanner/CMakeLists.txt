@@ -35,7 +35,7 @@ set(SOURCES
 )
 
 # Add a library with the above sources
-add_library(pathplanner SHARED ${SOURCES})
+add_library(pathplanner STATIC ${SOURCES})
 
 target_include_directories(pathplanner
     PUBLIC

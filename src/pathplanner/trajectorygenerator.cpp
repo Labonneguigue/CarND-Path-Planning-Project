@@ -5,8 +5,10 @@
 #define VERBOSE 0
 #define DEBUG 0
 
-TrajectoryGenerator::TrajectoryGenerator(SensorFusion& sensorFusion)
+TrajectoryGenerator::TrajectoryGenerator(SensorFusion& sensorFusion
+                                         , MapData& mapData)
 : mSensorFusion(sensorFusion) //remove if not used
+, mMapData(mapData)
 , mMajorWayPoints_x(0)
 , mMajorWayPoints_y(0)
 , mPlannedTrajectory_x(0)
@@ -85,7 +87,6 @@ void TrajectoryGenerator::initialiseTrajectoryWithRemainingOne(const ControllerF
 
 void TrajectoryGenerator::computeTrajectory(const ControllerFeedback& controllerFeedback,
                                             const BehaviorPlanner::HighLevelTrajectoryReport& result,
-                                            const MapData& mapData,
                                             std::vector<double>& next_x,
                                             std::vector<double>& next_y)
 {
@@ -106,9 +107,9 @@ void TrajectoryGenerator::computeTrajectory(const ControllerFeedback& controller
     {
         std::vector<double> next_wp = utl::getXY<double>(mSensorFusion.myAV().s + wp,
                                                          Highway::getDFromLane<double>(mCurrentTargetLane),
-                                                         mapData.waypoints_s,
-                                                         mapData.waypoints_x,
-                                                         mapData.waypoints_y);
+                                                         mMapData.waypoints_s,
+                                                         mMapData.waypoints_x,
+                                                         mMapData.waypoints_y);
         mMajorWayPoints_x.push_back(next_wp[0]);
         mMajorWayPoints_y.push_back(next_wp[1]);
 

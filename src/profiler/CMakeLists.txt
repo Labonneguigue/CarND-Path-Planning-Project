@@ -11,7 +11,7 @@ set(SOURCES
     include/entry.h
     )
 
-add_library(profiler SHARED ${SOURCES})
+add_library(profiler STATIC ${SOURCES})
 
 target_include_directories(profiler
 	PUBLIC

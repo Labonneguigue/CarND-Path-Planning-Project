@@ -41,8 +41,7 @@ public:
      *       be given to the simulator to actuate the car. They are given in world
      *       reference frame.
      */
-    void solvePath(MapData mapData,
-                   ControllerFeedback controllerFeedback,
+    void solvePath(ControllerFeedback controllerFeedback,
                    std::vector<double>& next_x,
                    std::vector<double>& next_y);
 

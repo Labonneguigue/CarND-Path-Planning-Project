@@ -5,13 +5,10 @@
 #include <thread>
 #include <vector>
 #include <limits>
-#include "third-party-lib/Eigen-3.3/Eigen/Core"
-#include "third-party-lib/Eigen-3.3/Eigen/QR"
 #include "third-party-lib/json.hpp"
 #include "utl.h"
 #include "pathplanner.h" // PathPlanner
 #include "profiler.h"
-
 
 using namespace std;
 
@@ -38,16 +35,24 @@ int main() {
     uWS::Hub h;
 
     ofstream profilerOutputFile;
-    profilerOutputFile.open("../../../../profiler_output/codeprofile.txt");
+
+#ifdef XCODE
+    profilerOutputFile.open("../../../profiler_output/codeprofile.txt");
+#else
+    profilerOutputFile.open("../../profiler_output/codeprofile.txt");
+#endif
+
     // Can also pass std::cout as argument to print to the console
     Profiler profiler(profilerOutputFile);
 
     // Instantiation of the classes requires to solve the path planning task
+    MapData mapData = MapData();
     SensorFusion sensorFusion = SensorFusion();
     Predictor predictor = Predictor(sensorFusion);
     BehaviorPlanner behaviorPlanner = BehaviorPlanner(predictor, sensorFusion);
-    TrajectoryGenerator trajectoryGenerator = TrajectoryGenerator(sensorFusion);
+    TrajectoryGenerator trajectoryGenerator = TrajectoryGenerator(sensorFusion, mapData);
     PathPlanner pathPlanner = PathPlanner(behaviorPlanner, predictor, trajectoryGenerator);
+
 
     // Load up map values for waypoint's x,y,s and d normalized normal std::vectors
     std::vector<double> map_waypoints_x;
@@ -57,7 +62,14 @@ int main() {
     std::vector<double> map_waypoints_dy;
 
     // Waypoint map to read from
-    string map_file_ = "../../../../data/highway_map.csv";
+    // It is relatively located differently when compiled using cmake .. && make
+    // or when Xcode compiles the path_planning executable (I added a -DXCODE flag)
+#ifdef XCODE
+    string map_file_ = "../../../data/highway_map.csv";
+#else
+    string map_file_ = "../data/highway_map.csv";
+#endif
+
     // The max s value before wrapping around the track back to 0
     double max_s = 6945.554;
 
@@ -83,20 +95,11 @@ int main() {
         map_waypoints_dy.push_back(d_y);
     }
 
-    assert(map_waypoints_x.size() > 0);
-    assert(map_waypoints_y.size() > 0);
-    assert(map_waypoints_s.size() > 0);
-    assert(map_waypoints_dx.size() > 0);
-    assert(map_waypoints_dy.size() > 0);
+    assert(mapData.initialize(map_waypoints_s, map_waypoints_x, map_waypoints_y) == true);
 
     h.onMessage([&profiler,
                  &sensorFusion,
-                 &pathPlanner,
-                 &map_waypoints_x,
-                 &map_waypoints_y,
-                 &map_waypoints_s,
-                 &map_waypoints_dx,
-                 &map_waypoints_dy](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
+                 &pathPlanner](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                                                                                                          uWS::OpCode opCode) {
         profiler.start("lambda", 100);
 
@@ -125,10 +128,6 @@ int main() {
                     double car_yaw = j[1]["yaw"];
                     double car_speed = j[1]["speed"];
 
-                    // Previous path data given to the Planner
-                    std::vector<double> previous_path_x = j[1]["previous_path_x"];
-                    std::vector<double> previous_path_y = j[1]["previous_path_y"];
-                    //std::cout << "Size of previous paths : " << previous_path_x.size() << " " << previous_path_y.size() << "\n";
 
                     // Previous path's end s and d values
                     //double end_path_s = j[1]["end_path_s"];
@@ -147,30 +146,15 @@ int main() {
                     sensorFusion.updateMyAVData(car_x, car_y, car_s, car_d, car_yaw, car_speed);
                     profiler.stop("SF update");
 
-                    // @TODO: no intermediate variable, read json directly into structure
-                    MapData mapData(map_waypoints_s, map_waypoints_x, map_waypoints_y);
+                    // Previous path data given to the Planner
+                    std::vector<double> previous_path_x = j[1]["previous_path_x"];
+                    std::vector<double> previous_path_y = j[1]["previous_path_y"];
+
                     ControllerFeedback controllerFeedback(previous_path_x, previous_path_y);
 
                     profiler.start("solvePath");
-                    pathPlanner.solvePath(mapData, controllerFeedback, next_x_vals, next_y_vals);
+                    pathPlanner.solvePath(controllerFeedback, next_x_vals, next_y_vals);
                     profiler.stop("solvePath");
-
-                    /*
-                    std::cout << "Current position " << car_x << " " << car_y << "\n";
-                    std::cout << next_x_vals[0] << " " << next_y_vals[0] << utl::distance(next_x_vals[0],
-                                                                                          next_y_vals[0],
-                                                                                          car_x,
-                                                                                          car_y) << "\n";
-                    std::cout << "Next x / y : \n";
-                    for (int i = 0 ; i < next_x_vals.size() ; ++i)
-                    {
-                        std::cout << next_x_vals[i] << " " << next_y_vals[i] << " " << utl::distance(next_x_vals[i],
-                                                                                                     next_y_vals[i],
-                                                                                                     next_x_vals[i-1],
-                                                                                                     next_y_vals[i-1]) << "\n";
-                    }
-                    std::cout << "\n";
-                    */
 
                     msgJson["next_x"] = next_x_vals;
                     msgJson["next_y"] = next_y_vals;

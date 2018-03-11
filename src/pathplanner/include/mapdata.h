@@ -10,16 +10,30 @@ struct MapData
     std::vector<double> waypoints_x;
     std::vector<double> waypoints_y;
 
-    MapData(std::vector<double>& s,
-            std::vector<double>& x,
-            std::vector<double>& y)
-    : waypoints_s(s)
-    , waypoints_x(x)
-    , waypoints_y(y)
+    /**
+     *
+     */
+    MapData()
+    {}
+
+    /**
+     *
+     */
+    bool initialize(std::vector<double>& s,
+                    std::vector<double>& x,
+                    std::vector<double>& y)
     {
-        assert(waypoints_s.size() > 0);
-        assert(waypoints_x.size() > 0);
-        assert(waypoints_y.size() > 0);
+        waypoints_s = s;
+        waypoints_x = x;
+        waypoints_y = y;
+
+        if ( (waypoints_s.size() > 0)
+            && (waypoints_x.size() > 0)
+            && (waypoints_y.size() > 0) )
+        {
+            return true;
+        }
+        return false;
     }
 };
 

@@ -12,14 +12,15 @@ class TrajectoryGenerator
 {
 public:
 
-    TrajectoryGenerator(SensorFusion& sensorFusion);
+    TrajectoryGenerator( SensorFusion& sensorFusion
+                       , MapData& mapData );
 
     ~TrajectoryGenerator();
 
     /** Compute the trajectory that the car should follow. The high level decisions
      *  for this trajectory have been set by the Behavior Planning sub-module.
      *  This method is responsible for generating a trajectory that is smooth,
-     *  doesn't exceed the maximum allowed jerk and acceleration and sensible
+     *  doesn't exceed the maximum allowed jerk and acceleration and also sensible
      *  in an environment with other cars on the road.
      *
      * @param[in] result High level decision regarding the trajectory (speed,target lane, ..)
@@ -30,7 +31,6 @@ public:
      */
     void computeTrajectory(const ControllerFeedback& controllerFeedback,
                            const BehaviorPlanner::HighLevelTrajectoryReport& result,
-                           const MapData& mapData,
                            std::vector<double>& next_x,
                            std::vector<double>& next_y);
 
@@ -63,7 +63,11 @@ private:
     inline void setCurrentTargetVelocity(const double velocityMs)
     { mCurrentTargetVelocityMs = velocityMs; }
 
+private:
+
     SensorFusion& mSensorFusion; ///< Reference to the sensor fusion database
+
+    MapData& mMapData; ///< Data relative to the simulation map in the simulator
 
     // Vector of widely spaced waypoints to be interpolated with a spline
     // to smooth out the car trajectory
