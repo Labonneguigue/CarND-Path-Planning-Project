@@ -1,0 +1,75 @@
+@startuml
+title Top-level class diagram
+
+class PathPlanner {
+    + solvePath(ControllerFeedback, ..)
+}
+
+class Predictor {
+    + environmentalEvaluation(Predictor::Warnings)
+    + prepareSensorDataForPrediction()
+    + getLaneSpeedAndTimeToInsertion(..)
+    - mNearbyCars : std::vector<DetectedVehicleData>
+}
+
+class BehaviorPlanner {
+    + computeNewTrajectory(Predictor::Warnings) : HighLevelTrajectoryReport
+    + cost(..) : double
+    + setWarnings(bool warningLevel)
+}
+
+class TrajectoryGenerator {
+    + computeTrajectory(ControllerFeedback, BehaviorPlanner::HighLevelTrajectoryReport, ..)
+    - initialiseTrajectory(ControllerFeedback)
+    - computeStepSpeed()
+    - setCurrentTargetVelocity(double velocityMs)
+    - mCurrentTargetVelocity : double
+    - mCurrentTargetLane
+    - mRemainingPathSize
+}
+
+class SensorFusion {
+    + updateCarsData(vector<vector<double>>& sensordata)
+    + updateMyAV(..)
+    + detectedCars() : vector<DetectedVehicleData>
+    + getDistanceAndSpeedCarAhead(double& distance, double& speed) : bool
+    + getVehicleLane(const double d) : Lane
+    + highway() : &Highway
+    + myAV() : &VehicleData
+    - mCars : vector<DetectedVehicleData>
+}
+
+class VehicleData {
+
+}
+
+class Highway {
+    + Highway(int nbLanes)
+    + getNumberOfLanes() : int
+    + getAvailablesLanes() : vector<int>
+    + getDeltaToAvailableLanes(int currentLanes) : vector<int>
+    + {static} getDFromLane(Lane laneNumber) : double
+    + {static} isCarInLane(Lane, double d) : bool
+    + lanes : vector<int>
+    + {static} initialLane = secondLane : Lane
+}
+
+Predictor o-- SensorFusion
+
+PathPlanner o-- BehaviorPlanner
+PathPlanner o-- Predictor
+PathPlanner o-- TrajectoryGenerator
+
+BehaviorPlanner o-- Predictor
+BehaviorPlanner o-- SensorFusion
+
+TrajectoryGenerator o-- SensorFusion
+TrajectoryGenerator o-- MapData
+TrajectoryGenerator *-- VehicleData : mEndPathCar
+
+SensorFusion *-- VehicleData : mMyAV
+SensorFusion *-- Highway : mHighway
+
+note "I purposefully omitted constness, and some arguments\nthat would only complexity to this diagram " as N1
+
+@enduml

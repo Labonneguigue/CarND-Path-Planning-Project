@@ -42,7 +42,7 @@ private:
      * @param[in] controllerFeedback Remaining trajectory as vector of x and y coordinates
      *
      */
-    void initialiseTrajectoryWithRemainingOne(const ControllerFeedback& controllerFeedback);
+    void initialiseTrajectory(const ControllerFeedback& controllerFeedback);
 
 
     /** In order to avoid |accelerating| too much, the speed of the car must
@@ -82,7 +82,7 @@ private:
     // remaining planned path not yet executed by the controller is small or not.
     VehicleData mEndPathCar;
 
-    double remainingPathSize; ///< The difference with mNumberOfWaypoints gives the number of waypoints to compute and append to the trajectory
+    double mRemainingPathSize; ///< The difference with mNumberOfWaypoints gives the number of waypoints to compute and append to the trajectory
     double mCurrentTargetVelocityMs; ///< Ongoing velocity target in [m/s], influenced by induced behavior
     Lane mCurrentTargetLane;
     
