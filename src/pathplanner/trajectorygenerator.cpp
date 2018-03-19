@@ -17,8 +17,11 @@ TrajectoryGenerator::TrajectoryGenerator(SensorFusion& sensorFusion
 , mRemainingPathSize(0)
 , mCurrentTargetVelocityMs(mMaximumVelocityMs)
 , mCurrentTargetLane(undefined)
+, mSpeedRegulator()
 {
     //std::cout << "mCurrentTargetVelocityMs : " << mCurrentTargetVelocityMs << "\n";
+    // Initialisation of the PID to regulate the speed when I am following a car
+    mSpeedRegulator.init(0.05, 1, 0.0005);
 }
 
 TrajectoryGenerator::~TrajectoryGenerator()
@@ -40,7 +43,7 @@ void TrajectoryGenerator::computeTrajectory(const ControllerFeedback& controller
     std::cout << "TrajectoryGenerator targets : speed \t" << mCurrentTargetVelocityMs << "\tlane :\t" << mCurrentTargetLane << "\n'";
 #endif
 
-    // Construction of 3 major waypoints at 30, 60 and 90 meters ahead of the car
+    // Construction of 3 major waypoints at 50, 100 and 150 meters ahead of the car
     const double step = 50.0;
     for (double wp = step; wp <= 3*step ; wp+= step)
     {
@@ -190,10 +193,27 @@ void TrajectoryGenerator::computeStepSpeed()
 
     assert(mEndPathCar.speedMs >= 0.0);
 
-    if ( (std::abs(mCurrentTargetVelocityMs - mEndPathCar.speedMs)
+    double distanceCarAhead;
+    double speedCarAhead;
+    mSensorFusion.getDistanceAndSpeedCarAhead( distanceCarAhead
+                                             , speedCarAhead);
+
+    double pidCorrectedSpeed = 0.0;
+    if (distanceCarAhead < policy::safeDistance * 1.5)
+    {
+        // I compute the Distance Error as the delta between the optimal
+        // safe distance and the actual distance between us
+        double deltaDistance = policy::safeDistance - distanceCarAhead;
+        mSpeedRegulator.updateError(deltaDistance);
+        pidCorrectedSpeed = mSpeedRegulator.totalError();
+    }
+
+    double appliedSpeed = mCurrentTargetVelocityMs + pidCorrectedSpeed;
+
+    if ( (std::abs(appliedSpeed - mEndPathCar.speedMs)
           / mSimulatorWaypointsDeltaT) > mMaximumAccelerationMs )
     {
-        if (mCurrentTargetVelocityMs > mEndPathCar.speedMs)
+        if (appliedSpeed > mEndPathCar.speedMs)
         {
             mEndPathCar.speedMs += mMaximumSpeedIncrement;
         }
@@ -204,8 +224,9 @@ void TrajectoryGenerator::computeStepSpeed()
     }
     else
     {
-        mEndPathCar.speedMs = mCurrentTargetVelocityMs;
+        mEndPathCar.speedMs = appliedSpeed;
     }
 
+    assert(mEndPathCar.speedMs <= policy::maxSpeedMs);
     //std::cout << " Updated speed : " << mMyAVSpeedAtEndOfPlannedPathMs << " current target velocity : " << mCurrentTargetVelocityMs << "\n";
 }

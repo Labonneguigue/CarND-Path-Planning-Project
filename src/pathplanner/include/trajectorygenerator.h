@@ -7,6 +7,7 @@
 #include "sensorfusion.h"
 #include "drivingpolicy.h"
 #include "behaviorplanner.h"
+#include "PID.h"
 
 class TrajectoryGenerator
 {
@@ -85,7 +86,9 @@ private:
     double mRemainingPathSize; ///< The difference with mNumberOfWaypoints gives the number of waypoints to compute and append to the trajectory
     double mCurrentTargetVelocityMs; ///< Ongoing velocity target in [m/s], influenced by induced behavior
     Lane mCurrentTargetLane;
-    
+
+    PID<float> mSpeedRegulator;
+
     static constexpr double mMaximumAccelerationMs = policy::getSafePolicy(policy::maxAccelerationMs); ///< Maximum allowed acceleration in m/s^2 @note 10 m/s is the required max
     static constexpr const double mSimulatorWaypointsDeltaT = policy::simulatorDeltaT;
     static constexpr const double mMaximumSpeedIncrement = mSimulatorWaypointsDeltaT * mMaximumAccelerationMs;

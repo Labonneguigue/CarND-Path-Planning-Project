@@ -23,7 +23,8 @@ void PathPlanner::solvePath(ControllerFeedback controllerFeedback,
 
     // I check if there are any warning flags raised, if so I run the Behavior Planner module
     Predictor::Warnings warnings;
-    //mPredictor.environmentalEvaluation(warnings);
+    mPredictor.environmentalEvaluation(warnings);
+
     if(warnings.anyWarningRaised)
     {
         std::cout << "Warnings ! I run my Behavior Planner ...\n";

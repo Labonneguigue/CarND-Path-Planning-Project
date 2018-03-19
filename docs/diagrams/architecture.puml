@@ -70,6 +70,6 @@ TrajectoryGenerator *-- VehicleData : mEndPathCar
 SensorFusion *-- VehicleData : mMyAV
 SensorFusion *-- Highway : mHighway
 
-note "I purposefully omitted constness, and some arguments\nthat would only complexity to this diagram " as N1
+note "I purposefully omitted constness, and some arguments\nthat would only add complexity this diagram." as N1
 
 @enduml

@@ -92,6 +92,8 @@ private:
 
     std::vector<DetectedVehicleData> mCars; ///< Vector of data about detected cars
 
+    DetectedVehicleData * mCarAhead; ///< Car immediately ahead of myAV
+
     VehicleData mMyAV; ///< Instance of my autonomous vehicle
 
     Highway mHighway; ///< Highway representation

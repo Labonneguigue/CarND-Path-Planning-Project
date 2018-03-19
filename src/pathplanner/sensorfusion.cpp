@@ -5,6 +5,7 @@
 
 SensorFusion::SensorFusion()
 : mCars()
+, mCarAhead(nullptr)
 , mMyAV()
 , mHighway(policy::defaultNbLanes)
 {}
@@ -33,14 +34,14 @@ void SensorFusion::updateCarsData(std::vector<std::vector<double>>& sensordata)
         for (int newData = 0 ; newData < sensordata.size() ; ++newData)
         {
             bool found = false;
-            // Since the previous records are sorted, I iterate until
+            // Since the previous records are sorted, I don't have to iterate through the whole set of cars.
             for (int previousRecord = 0 ; ((mCars[previousRecord].id <= sensordata[newData][0]) &&
                                            (previousRecord < mCars.size()) &&
                                            (!found)) ; ++previousRecord)
             {
                 if (mCars[previousRecord].id == sensordata[newData][0])
                 {
-                    //Record exist, I update it.
+                    // Record exist, I update it.
                     mCars[previousRecord].updateData(sensordata[newData][1],
                                                      sensordata[newData][2],
                                                      sensordata[newData][3],
@@ -48,13 +49,12 @@ void SensorFusion::updateCarsData(std::vector<std::vector<double>>& sensordata)
                                                      sensordata[newData][5],
                                                      sensordata[newData][6],
                                                      getVehicleLane(sensordata[newData][6]));
-                    //
                     found = true;
                 }
             }
             if (!found)
             {
-                //Record doesn't exist, I append it at the end
+                // Record doesn't exist, I append it at the end
                 mCars.push_back(DetectedVehicleData(sensordata[newData][0],
                                                     sensordata[newData][1],
                                                     sensordata[newData][2],
@@ -66,7 +66,7 @@ void SensorFusion::updateCarsData(std::vector<std::vector<double>>& sensordata)
 
             }
         }
-        // Finish merging, I sort it for nex time
+        // Finish merging, I sort it for next time
         std::sort(mCars.begin(), mCars.end());
     }
 }

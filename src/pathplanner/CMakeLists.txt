@@ -15,6 +15,8 @@ set(SOURCES
 	# Trajectory Generation sub-component
     trajectorygenerator.cpp
     include/trajectorygenerator.h
+	# PID used for speed regulation
+    include/PID.h
 	# Prediction sub-component
     predictor.cpp
     include/predictor.h

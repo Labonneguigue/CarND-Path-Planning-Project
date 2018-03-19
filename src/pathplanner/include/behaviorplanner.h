@@ -57,6 +57,8 @@ public:
     /** Update the state of the vehicle using the SensorFusion data
      *  being processed by the Predictor.
      *
+     * @return Trajectory decision
+     *
      */
     const BehaviorPlanner::HighLevelTrajectoryReport computeNewTrajectory(Predictor::Warnings warnings);
 
@@ -67,7 +69,7 @@ public:
      * @param[in] targetLane The target lane for which the cost is evaluated
      * @param[in] timeToInsertion The time to wait before changing lane
      *
-     * return double Cost to choose this trajectory
+     * @return double Cost to choose this trajectory
      * 
      * @note The cost is bounded between 0 and 1. The lower the cost, the better
      *       the trajectory. The time to insertion differentiate between a laneChange

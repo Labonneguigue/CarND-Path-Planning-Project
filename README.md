@@ -78,6 +78,28 @@ Here is my code architecture that I used to answer this problem.
 
 Special thanks to the [Spline library](http://kluge.in-chemnitz.de/opensource/spline/) that was really useful to generate smooth trajectories!
 
+##### Speed Control : PID Controller 🛂
+
+Let's say at some point a car change lane in front on me without keeping what I consider to be a safe distance between us, then I need to slow down in order to establish that distance. To smooth out this process, I added a PID controller which outputs a speed based on the error in distance in-between myself and the car ahead relative to a safe distance that I hardcoded.
+
+```cpp
+double pidCorrectedSpeed = 0.0;
+if (distanceCarAhead < policy::safeDistance * 1.5)
+{
+    // I compute the Distance Error as the delta between the optimal
+    // safe distance and the actual distance between us
+    double deltaDistance = policy::safeDistance - distanceCarAhead;
+    mSpeedRegulator.updateError(deltaDistance);
+    pidCorrectedSpeed = mSpeedRegulator.totalError();
+}
+
+double appliedSpeed = mCurrentTargetVelocityMs + pidCorrectedSpeed;
+```
+
+```cpp
+constexpr static const int policy::safeDistance = 10; ///< Safe distance to always (try to) keep between cars.
+```
+
 #### Predictor
 
 
