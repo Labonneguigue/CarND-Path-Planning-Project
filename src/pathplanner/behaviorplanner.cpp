@@ -97,8 +97,13 @@ double BehaviorPlanner::cost(const Lane currentLane,
 
     constexpr const double targetS = 400; // The cost function always aims at this far target
 
-    // Since there are no specific lane goal, I set it to be the current one so that
-    // switching lane is (slightly) penalised.
+    // * If the car drives in the US, there are no specific lane goal.
+    //   The prefered target lane is the current one in order to reduce
+    //   the number of lane change. Switching lane is (slightly) penalised.
+    // * If the car drives in EU for example, the should stay on the right
+    //   most lane if the car is not undertaking. In that case the prefered
+    //   target lane is the right most one. Not being on that lane will be
+    //   slightly penalized.
     const double delta_d = (std::abs(preferedTargetLane - targetLane) * 0.1) + 1.0;
     double cost;
     double laneSpeedMs;
@@ -124,18 +129,29 @@ double BehaviorPlanner::cost(const Lane currentLane,
     }
     else
     {
-        mPredictor.getLaneSpeedAndTimeToInsertion(targetLane, laneSpeedMs, report.timeToInsertion);
         /* Cost should be calculated as the time to target s:
          - the time to insertion
          - the ramp up/down time from current speed to lane speed
          - the current speed of the lane
          */
 
-        // Idea: 0 cost would be acceleration to max speed and keep it until target.
+        mPredictor.getLaneSpeedAndTimeToInsertion(targetLane
+                                                 ,laneSpeedMs
+                                                 ,report.timeToInsertion);
+
+        // If the car want to change 2 lanes, it needs to take into
+        // consideration the time to change to the first lane
+        if (abs(currentLane-targetLane) >= 2)
+        {
+            ///@todo Come up with a solution here
+            report.timeToInsertion += 0.0;
+        }
+
+        constexpr const double thresholdForImmediateLaneChange = 0.1;
 
         if (targetLane > currentLane)
         {
-            if (report.timeToInsertion < 0.1)
+            if (report.timeToInsertion < thresholdForImmediateLaneChange)
             {
                 report.behavior = rightLaneChange;
             }
@@ -146,7 +162,7 @@ double BehaviorPlanner::cost(const Lane currentLane,
         }
         else if(targetLane < currentLane)
         {
-            if (report.timeToInsertion < 0.1)
+            if (report.timeToInsertion < thresholdForImmediateLaneChange)
             {
                 report.behavior = leftLaneChange;
             }

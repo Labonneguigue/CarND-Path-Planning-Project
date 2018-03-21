@@ -5,7 +5,7 @@
 
 namespace policy
 {
-    constexpr static const bool keepRightLane = true; ///< False: US, True: EU
+    constexpr static const bool keepRightLane = false; ///< False: US, True: EU
 
     constexpr static const int defaultNbLanes = 3; ///< Default number of lanes on the road at startup time
     constexpr static const int safeDistance = 10; ///< Safe distance to always (try to) keep between cars.
