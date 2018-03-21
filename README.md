@@ -74,6 +74,21 @@ Here is my code architecture that I used to answer this problem.
 
 #### Behavior Planner
 
+The behavior planner is responsible for issuing general driving decisions like _Stay in Lane_, _Turn Right_ or _Turn Left_.
+
+How it works is by aiming to reach a point on the map far ahead and compute the cost of (read "time to reach that point") changing/staying in each lane. That cost function uses data about the other cars on the road provided by the Sensor Fusion module to decide which lane is the best fit.
+
+##### Driving Policy
+
+I added a document `policy.h` collecting many hardcoded values which influence how the car drive.
+In Europe cars are required to keep right when they are not overtaking whereas in the US, the driving policy is more lenient and do not enforce any behavior. I added a boolean flag to enable both driving styles.
+
+```cpp
+constexpr static const bool keepRightLane = false; ///< False: US, True: EU
+```
+
+For now this is a compile time setting but it could easily be modifiable at runtime if the car detected that it crossed the Atlantic. 🌊
+
 #### Trajectory Generator
 
 Special thanks to the [Spline library](http://kluge.in-chemnitz.de/opensource/spline/) that was really useful to generate smooth trajectories!

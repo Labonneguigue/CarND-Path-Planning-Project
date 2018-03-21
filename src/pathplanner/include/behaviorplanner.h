@@ -76,8 +76,9 @@ public:
      *       and a prepareLaneChange type of behavior.
      */
     double cost(const Lane currentLane,
-                const double currentSpeed,
                 const Lane targetLane,
+                const Lane preferedTargetLane,
+                const double currentSpeed,
                 const Predictor::Warnings& warnings,
                 HighLevelTrajectoryReport& report) const;
 

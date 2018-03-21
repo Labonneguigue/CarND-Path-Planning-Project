@@ -44,6 +44,17 @@ const BehaviorPlanner::HighLevelTrajectoryReport BehaviorPlanner::computeNewTraj
     // Get the Prediction module prepared to compute the cost functions
     mPredictor.prepareSensorDataForPrediction();
 
+    Lane preferedTargetLane;
+
+    if (policy::keepRightLane)
+    {
+        preferedTargetLane = lanes[lanes.size()-1];
+    }
+    else
+    {
+        preferedTargetLane = currentLane;
+    }
+
     for (int i = 0; i < lanes.size() ; ++i)
     {
         if (abs(currentLane - lanes[i]) >= 2)
@@ -53,11 +64,13 @@ const BehaviorPlanner::HighLevelTrajectoryReport BehaviorPlanner::computeNewTraj
         else
         {
             costs[i] = cost(currentLane,
-                            currentSpeedMs,
                             lanes[i],
+                            preferedTargetLane,
+                            currentSpeedMs,
                             mWarnings,
                             mResults[i]);
         }
+
         if (costs[i] < minimumCost)
         {
             minimumCost = costs[i];
@@ -71,8 +84,9 @@ const BehaviorPlanner::HighLevelTrajectoryReport BehaviorPlanner::computeNewTraj
 }
 
 double BehaviorPlanner::cost(const Lane currentLane,
-                             const double currentSpeedMs,
                              const Lane targetLane,
+                             const Lane preferedTargetLane,
+                             const double currentSpeedMs,
                              const Predictor::Warnings& warnings,
                              HighLevelTrajectoryReport& report) const
 {
@@ -81,12 +95,11 @@ double BehaviorPlanner::cost(const Lane currentLane,
 
     std::cout << "Cost calculation for lane : " << targetLane << "\n";
 
-    constexpr const double targetS = 300; // The cost function always aims at this far target
+    constexpr const double targetS = 400; // The cost function always aims at this far target
 
     // Since there are no specific lane goal, I set it to be the current one so that
     // switching lane is (slightly) penalised.
-    const int targetD = currentLane;
-    const double delta_d = (std::abs(targetD - targetLane) * 0.1) + 1.0;
+    const double delta_d = (std::abs(preferedTargetLane - targetLane) * 0.1) + 1.0;
     double cost;
     double laneSpeedMs;
     const double minimumCostTime = targetS / utl::mph2ms(policy::maxSpeedMph);
