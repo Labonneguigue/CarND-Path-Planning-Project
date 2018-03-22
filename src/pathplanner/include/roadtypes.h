@@ -30,14 +30,16 @@ struct Highway
 
     /** Constructor
      *
-     * @param nbLanes
+     * @param[in] nbLanes Number of lanes on the current highway
      *
      * @note Each lanes has an incrementing number starting a 0 for
      *       the leftmost lane (Assume right lane driving)
      */
     Highway(const int nbLanes)
-    : lanes(nbLanes)
-    {}
+    : lanes()
+    {
+        setNumberLanes(nbLanes);
+    }
 
     /** Returns the number of lanes on the road
      *
@@ -54,13 +56,25 @@ struct Highway
      */
     const std::vector<Lane> getAvailableLanes() const
     {
-        std::vector<Lane> availableLanes;
-        for (int lane = 0; lane < lanes.size() ; ++lane)
+        return lanes;
+    }
+
+    /** Changes dynamically the size of the road to adapt to another
+     *  size of highway
+     *
+     * @param[in] nbLanes Number of lanes that contains this highway
+     *
+     */
+    void setNumberLanes(const int nbLanes)
+    {
+        lanes.clear();
+
+        for (int lane = 0; lane < nbLanes ; ++lane)
         {
-            availableLanes.push_back(static_cast<Lane>(lane));
+            lanes.push_back(static_cast<Lane>(lane));
         }
-        assert(availableLanes.size() > 0);
-        return availableLanes;
+
+        assert(lanes.size() > 0);
     }
 
     /** Returns delta in number of lane to each available lanes on this road
@@ -69,18 +83,18 @@ struct Highway
      *
      * @return vector<int> difference in lane numbering to each available lane
      */
-    const std::vector<int> getDeltaToAvailableLanes(const int currentLane) const
+    const std::vector<Lane> getDeltaToAvailableLanes(const Lane currentLane) const
     {
         // Can't be in another lane than the one represented by this struct
         assert(currentLane < lanes.size());
         assert(currentLane >= 0);
 
-        std::vector<int> availableLanes;
+        std::vector<Lane> deltaLanes;
         for (int lane = 0; lane < lanes.size() ; ++lane)
         {
-            availableLanes.push_back(lane-currentLane);
+            deltaLanes.push_back(static_cast<Lane>(lanes[lane]-currentLane));
         }
-        return availableLanes;
+        return deltaLanes;
     }
 
     /**
@@ -114,7 +128,7 @@ struct Highway
                 (d > (getDFromLane<T>(lane) - halfLaneWidth))) ? true : false;
     }
 
-    std::vector<int> lanes; ///< vector representing the lanes. Each integer is the lane number
+    std::vector<Lane> lanes; ///< vector representing the lanes. Each integer is the lane number
 
     constexpr const static Lane initialLane = secondLane; ///< Hardcoded initial lane for initialisation
 };

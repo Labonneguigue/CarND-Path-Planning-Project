@@ -1,90 +1,192 @@
       Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
-         lambda  |              100  |          304.422  |                1  |            12646  |          3044.22  |  
-      SF update  |               99  |          179.549  |               82  |            11130  |          1813.63  |  
-      solvePath  |               99  |           11.837  |               52  |              614  |          119.566  |  
+         lambda  |              100  |          182.278  |                1  |             8416  |          1822.78  |  
+      SF update  |               99  |           89.536  |               47  |             7184  |          904.404  |  
+      solvePath  |               99  |            9.362  |               54  |              388  |          94.5657  |  
 
 
       Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
-         lambda  |              200  |          612.859  |                1  |            12646  |           3064.3  |  
-      SF update  |              199  |          341.024  |               82  |            11130  |          1713.69  |  
-      solvePath  |              199  |           28.018  |               52  |              701  |          140.794  |  
+         lambda  |              200  |          536.067  |                1  |            48636  |          2680.34  |  
+      SF update  |              199  |          326.357  |               47  |            47028  |          1639.98  |  
+      solvePath  |              199  |           20.787  |               54  |              771  |          104.457  |  
 
 
       Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
-         lambda  |              300  |          1014.42  |                1  |            13029  |          3381.41  |  
-      SF update  |              299  |          566.801  |               82  |            11130  |          1895.66  |  
-      solvePath  |              299  |           67.004  |               52  |             2383  |          224.094  |  
+         lambda  |              300  |          816.507  |                1  |            48636  |          2721.69  |  
+      SF update  |              299  |          450.825  |               47  |            47028  |          1507.78  |  
+      solvePath  |              299  |           70.603  |               54  |             1011  |           236.13  |  
 
 
       Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
-         lambda  |              400  |          2605.08  |                1  |           118456  |           6512.7  |  
-      SF update  |              399  |          1732.93  |               82  |           115706  |          4343.18  |  
-      solvePath  |              399  |          342.359  |               52  |            41556  |          858.043  |  
+         lambda  |              400  |          1119.21  |                1  |            48636  |          2798.03  |  
+      SF update  |              399  |          588.621  |               47  |            47028  |          1475.24  |  
+      solvePath  |              399  |          134.653  |               54  |            10559  |          337.476  |  
 
 
       Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
-         lambda  |              500  |           4986.9  |                1  |           231851  |          9973.81  |  
-      SF update  |              499  |          3224.63  |               82  |           115706  |          6462.19  |  
-      solvePath  |              499  |          1088.41  |               52  |           182360  |          2181.18  |  
+         lambda  |              500  |          1431.25  |                1  |            48636  |           2862.5  |  
+      SF update  |              499  |          746.595  |               47  |            47028  |          1496.18  |  
+      solvePath  |              499  |          199.395  |               54  |            10559  |          399.589  |  
 
 
       Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
-         lambda  |              600  |          6346.94  |                1  |           231851  |          10578.2  |  
-      SF update  |              599  |          4033.18  |               82  |           115706  |           6733.2  |  
-      solvePath  |              599  |          1494.59  |               52  |           182360  |          2495.15  |  
+         lambda  |              600  |          1883.79  |                1  |            48636  |          3139.65  |  
+      SF update  |              599  |          947.739  |               47  |            47028  |           1582.2  |  
+      solvePath  |              599  |           361.27  |               54  |            35550  |          603.122  |  
 
 
       Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
-         lambda  |              700  |          7437.68  |                1  |           231851  |          10625.3  |  
-      SF update  |              699  |          4818.96  |               82  |           115706  |          6894.07  |  
-      solvePath  |              699  |          1646.56  |               52  |           182360  |           2355.6  |  
+         lambda  |              700  |          2254.26  |                1  |            48636  |          3220.37  |  
+      SF update  |              699  |          1161.82  |               47  |            47028  |          1662.12  |  
+      solvePath  |              699  |           430.38  |               54  |            35550  |          615.708  |  
 
 
       Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
-         lambda  |              800  |          8282.33  |                1  |           231851  |          10352.9  |  
-      SF update  |              799  |          5424.43  |               82  |           115706  |          6789.02  |  
-      solvePath  |              799  |          1738.15  |               52  |           182360  |           2175.4  |  
+         lambda  |              800  |          2549.78  |                1  |            48636  |          3187.23  |  
+      SF update  |              799  |           1340.8  |               47  |            47028  |           1678.1  |  
+      solvePath  |              799  |          459.565  |               54  |            35550  |          575.175  |  
 
 
       Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
-         lambda  |              900  |          8919.59  |                1  |           231851  |          9910.66  |  
-      SF update  |              899  |          5890.04  |               82  |           115706  |          6551.77  |  
-      solvePath  |              899  |          1759.15  |               52  |           182360  |          1956.79  |  
+         lambda  |              900  |           2876.8  |                1  |            48636  |          3196.44  |  
+      SF update  |              899  |          1492.44  |               47  |            47028  |          1660.11  |  
+      solvePath  |              899  |          545.396  |               54  |            35550  |           606.67  |  
 
 
       Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
-         lambda  |             1000  |          9604.66  |                1  |           231851  |          9604.66  |  
-      SF update  |              999  |          6426.43  |               82  |           115706  |          6432.86  |  
-      solvePath  |              999  |          1779.54  |               52  |           182360  |          1781.32  |  
+         lambda  |             1000  |          3247.33  |                1  |            48636  |          3247.33  |  
+      SF update  |              999  |          1668.09  |               47  |            47028  |          1669.76  |  
+      solvePath  |              999  |          648.847  |               54  |            35550  |          649.496  |  
 
 
       Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
-         lambda  |             1100  |          10384.5  |                1  |           231851  |          9440.49  |  
-      SF update  |             1099  |          7053.98  |               82  |           115706  |          6418.54  |  
-      solvePath  |             1099  |          1800.32  |               52  |           182360  |          1638.14  |  
+         lambda  |             1100  |          3586.47  |                1  |            48636  |          3260.42  |  
+      SF update  |             1099  |          1810.43  |               47  |            47028  |          1647.34  |  
+      solvePath  |             1099  |          749.792  |               54  |            35550  |          682.249  |  
 
 
       Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
-         lambda  |             1200  |          11307.4  |                1  |           231851  |           9422.8  |  
-      SF update  |             1199  |          7817.66  |               82  |           115706  |          6520.15  |  
-      solvePath  |             1199  |          1814.38  |               52  |           182360  |          1513.24  |  
+         lambda  |             1200  |          3920.22  |                1  |            48636  |          3266.85  |  
+      SF update  |             1199  |             1959  |               47  |            47028  |          1633.86  |  
+      solvePath  |             1199  |          843.631  |               54  |            35550  |          703.612  |  
 
 
       Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
-         lambda  |             1300  |          12116.9  |                1  |           231851  |          9320.68  |  
-      SF update  |             1299  |          8459.02  |               82  |           115706  |          6511.94  |  
-      solvePath  |             1299  |          1829.32  |               52  |           182360  |          1408.25  |  
+         lambda  |             1300  |          6315.49  |                1  |      1.67596e+06  |          4858.07  |  
+      SF update  |             1299  |          2275.93  |               47  |            86232  |          1752.06  |  
+      solvePath  |             1299  |          2829.16  |               54  |      1.66714e+06  |          2177.95  |  
 
 
       Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
-         lambda  |             1400  |          12783.9  |                1  |           231851  |          9131.36  |  
-      SF update  |             1399  |          8960.07  |               82  |           115706  |          6404.62  |  
-      solvePath  |             1399  |          1860.99  |               52  |           182360  |          1330.23  |  
+         lambda  |             1400  |          6716.34  |                1  |      1.67596e+06  |          4797.38  |  
+      SF update  |             1399  |          2447.78  |               47  |            86232  |          1749.67  |  
+      solvePath  |             1399  |          2965.63  |               54  |      1.66714e+06  |          2119.82  |  
 
 
       Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
-         lambda  |             1500  |          14352.6  |                1  |           231851  |          9568.43  |  
-      SF update  |             1499  |          10070.6  |               82  |           115706  |          6718.18  |  
-      solvePath  |             1499  |          2173.44  |               52  |           182360  |          1449.93  |  
+         lambda  |             1500  |          7180.41  |                1  |      1.67596e+06  |          4786.94  |  
+      SF update  |             1499  |          2776.51  |               47  |            86232  |          1852.24  |  
+      solvePath  |             1499  |           3013.9  |               54  |      1.66714e+06  |          2010.61  |  
+
+
+      Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
+         lambda  |             1600  |          7637.06  |                1  |      1.67596e+06  |          4773.16  |  
+      SF update  |             1599  |          3020.67  |               47  |           126109  |           1889.1  |  
+      solvePath  |             1599  |           3134.3  |               54  |      1.66714e+06  |          1960.16  |  
+
+
+      Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
+         lambda  |             1700  |          7868.08  |                1  |      1.67596e+06  |          4628.28  |  
+      SF update  |             1699  |          3101.88  |               47  |           126109  |          1825.71  |  
+      solvePath  |             1699  |          3189.94  |               54  |      1.66714e+06  |          1877.54  |  
+
+
+      Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
+         lambda  |             1800  |          8111.95  |                1  |      1.67596e+06  |          4506.64  |  
+      SF update  |             1799  |          3191.94  |               47  |           126109  |          1774.29  |  
+      solvePath  |             1799  |          3246.72  |               54  |      1.66714e+06  |          1804.73  |  
+
+
+      Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
+         lambda  |             1900  |          8394.44  |                1  |      1.67596e+06  |          4418.13  |  
+      SF update  |             1899  |          3319.07  |               47  |           126109  |           1747.8  |  
+      solvePath  |             1899  |          3312.04  |               54  |      1.66714e+06  |           1744.1  |  
+
+
+      Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
+         lambda  |             2000  |          8714.48  |                1  |      1.67596e+06  |          4357.24  |  
+      SF update  |             1999  |          3486.74  |               47  |           126109  |          1744.24  |  
+      solvePath  |             1999  |          3372.45  |               54  |      1.66714e+06  |          1687.07  |  
+
+
+      Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
+         lambda  |             2100  |          9001.23  |                1  |      1.67596e+06  |           4286.3  |  
+      SF update  |             2099  |          3611.28  |               47  |           126109  |          1720.48  |  
+      solvePath  |             2099  |          3440.88  |               54  |      1.66714e+06  |          1639.29  |  
+
+
+      Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
+         lambda  |             2200  |          9268.99  |                1  |      1.67596e+06  |          4213.18  |  
+      SF update  |             2199  |          3726.38  |               47  |           126109  |          1694.58  |  
+      solvePath  |             2199  |          3498.59  |               54  |      1.66714e+06  |          1590.99  |  
+
+
+      Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
+         lambda  |             2300  |          9549.61  |                1  |      1.67596e+06  |             4152  |  
+      SF update  |             2299  |          3845.05  |               47  |           126109  |          1672.49  |  
+      solvePath  |             2299  |          3561.87  |               54  |      1.66714e+06  |          1549.31  |  
+
+
+      Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
+         lambda  |             2400  |          9845.32  |                1  |      1.67596e+06  |          4102.21  |  
+      SF update  |             2399  |          3973.94  |               47  |           126109  |           1656.5  |  
+      solvePath  |             2399  |           3624.5  |               54  |      1.66714e+06  |          1510.84  |  
+
+
+      Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
+         lambda  |             2500  |          10129.4  |                1  |      1.67596e+06  |          4051.78  |  
+      SF update  |             2498  |          4086.24  |               47  |           126109  |          1635.81  |  
+      solvePath  |             2498  |          3694.63  |               52  |      1.66714e+06  |          1479.03  |  
+
+
+      Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
+         lambda  |             2600  |          10332.9  |                1  |      1.67596e+06  |          3974.21  |  
+      SF update  |             2598  |          4186.86  |               47  |           126109  |          1611.57  |  
+      solvePath  |             2598  |          3703.66  |               48  |      1.66714e+06  |          1425.58  |  
+
+
+      Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
+         lambda  |             2700  |            11748  |                1  |      1.67596e+06  |          4351.12  |  
+      SF update  |             2698  |          5321.62  |               47  |           853753  |          1972.43  |  
+      solvePath  |             2698  |          3868.69  |               48  |      1.66714e+06  |          1433.91  |  
+
+
+      Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
+         lambda  |             2800  |          12225.7  |                1  |      1.67596e+06  |          4366.32  |  
+      SF update  |             2798  |           5585.3  |               47  |           853753  |          1996.18  |  
+      solvePath  |             2798  |          3950.72  |               48  |      1.66714e+06  |          1411.98  |  
+
+
+      Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
+         lambda  |             2900  |          12584.3  |                1  |      1.67596e+06  |          4339.41  |  
+      SF update  |             2898  |          5778.83  |               47  |           853753  |          1994.07  |  
+      solvePath  |             2898  |          3986.81  |               48  |      1.66714e+06  |          1375.71  |  
+
+
+      Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
+         lambda  |             3000  |          12940.9  |                1  |      1.67596e+06  |          4313.64  |  
+      SF update  |             2998  |           6005.2  |               47  |           853753  |          2003.07  |  
+      solvePath  |             2998  |          4000.64  |               48  |      1.66714e+06  |          1334.44  |  
+
+
+      Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
+         lambda  |             3100  |          13496.5  |                1  |      1.67596e+06  |          4353.72  |  
+      SF update  |             3098  |           6408.3  |               47  |           853753  |          2068.53  |  
+      solvePath  |             3098  |          4016.26  |               48  |      1.66714e+06  |           1296.4  |  
+
+
+      Call name  |  Number of calls  |  Cum runtime(ms)  |  Min runtime(us)  |  Max runtime(us)  |  Avg runtime(us)  |  
+         lambda  |             3200  |          13849.7  |                1  |      1.67596e+06  |          4328.02  |  
+      SF update  |             3198  |          6621.81  |               47  |           853753  |          2070.61  |  
+      solvePath  |             3198  |           4041.2  |               48  |      1.66714e+06  |          1263.66  |  
 
 

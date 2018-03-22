@@ -72,6 +72,26 @@ Here is my code architecture that I used to answer this problem.
 
 ![alt text][uml]
 
+##### Modular Highway Model
+
+I designed my algorithm in a modular fashion with the least hardcoded values as possible and as few dependencies as possible. Following this concept, the Behavior Planner module does have to know how many lanes there are on the road. The `Highway` structure keeps track of how many lanes there are on the highway and provides the available lanes number to whoever wants them.
+
+```cpp
+constexpr static const int defaultNbLanes = 3; ///< Default number of lanes on the road at startup time
+```
+
+You'll think it doesn't make much sense in that project but in real life, an AV would likely leave that 3 lanes highway scenario and would need to update its internal representation of the road it is currently on.
+
+```c++
+/** Changes dynamically the size of the road to adapt to another
+ *  size of highway
+ *
+ * @param[in] nbLanes Number of lanes that contains this highway
+ *
+ */
+void setNumberLanes(const int nbLanes);
+```
+
 #### Behavior Planner
 
 The behavior planner is responsible for issuing general driving decisions like _Stay in Lane_, _Turn Right_ or _Turn Left_.
