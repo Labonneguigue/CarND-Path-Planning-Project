@@ -185,6 +185,14 @@ For now this is a compile time setting but it could easily be modifiable at runt
 3. Compile: `cmake .. && make`
 4. Run it: `./path_planning`.
 
+#### Create Xcode Project
+
+1. Create a xcode folder in the build folder: `mkdir xcode && cd xcode`
+2. Create the xcode project using cmake: `cmake ../.. -G "Xcode"`
+3. Open the project: `open Path_Planning.xcodeproj`
+Because Xcode creates the executable binary in a folder and we need to open the map data contained in a csv file, I have set a preprocessor directive to change the hardcoded path to it. The following build flag enables it:
+4. Click on the blue Path_Planning project and under xxx add the following flag to the file main.cpp: `-DXCODE`
+
 ### Dependencies
 
 * cmake >= 3.5
@@ -205,6 +213,8 @@ For now this is a compile time setting but it could easily be modifiable at runt
     cd uWebSockets
     git checkout e94b6e1
     ```
+* libuv 
+* openssl
 
 ### Third Party Libraries
 

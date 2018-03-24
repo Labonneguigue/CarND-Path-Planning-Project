@@ -14,7 +14,7 @@ Profiler::~Profiler()
 void Profiler::start(const std::string name)
 {
     bool entryExist = false;
-    for (int entry = 0; entry < mEntries.size(); ++entry)
+    for (unsigned int entry = 0; entry < mEntries.size(); ++entry)
     {
         if ( name == mEntries[entry].getName() )
         {
@@ -42,7 +42,7 @@ void Profiler::start(const std::string name, const double callsBeforePrint)
 void Profiler::stop(const std::string name)
 {
     bool entryExist = false;
-    for (int entry = 0; entry < mEntries.size(); ++entry)
+    for (unsigned int entry = 0; entry < mEntries.size(); ++entry)
     {
         if ( name == mEntries[entry].getName() )
         {
@@ -61,7 +61,7 @@ void Profiler::stop(const std::string name)
 void Profiler::print()
 {
     Entry::printHeader(mOstream);
-    for (int entry = 0; entry < mEntries.size(); ++entry)
+    for (unsigned int entry = 0; entry < mEntries.size(); ++entry)
     {
         mEntries[entry].print(mOstream);
     }

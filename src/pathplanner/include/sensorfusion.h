@@ -42,7 +42,7 @@ public:
                         double s_,
                         double d_,
                         double yaw_,
-                        double speed_);
+                        double speedmph);
 
     /** Returns a reference to myAV
      *
@@ -65,28 +65,27 @@ public:
         return mHighway;
     }
 
-    /** Detects whether there is a car ahead or not, if it is the case
-     *  the distance to that car is returned in the variable distance as
-     *  well as its speed. The closest car is returned if multiple cars are
-     *  detected ahead of us in the current lane.
-     *
-     * @note The number of the lane of myAV and its s Frenet coordinate are used
-     *       to compute the following results
-     *
-     * @param[out] distance Distance to the car in front. max double if no car found
-     * @param[out] speed Speed to the car in front. max double if no car found
-     *
-     * @return True if vehicle is ahead and the data in distance is correct, False otherwise
-     */
-    bool getDistanceAndSpeedCarAhead(double& distance, double& speed);
-
     /** Returns the lane of a car given its d frenet component
      *
      * @param[in] d Frenet representation d component
      * 
-     * @return Lane Enumerator identifying the lane. Returns undefined if fails.
+     * @tparam T Type to be returned - Can be typically either int or Lane
+     *
+     * @return Lane identifying the lane. Returns undefined if fails.
      */
-    Lane getVehicleLane(const double d) const;
+    template <typename T>
+    T getVehicleLane(const double d) const
+    {
+        std::vector<Lane> lanes = mHighway.getAvailableLanes();
+        for (unsigned int lane = 0; lane < lanes.size() ; ++lane)
+        {
+            if (mHighway.isCarInLane(lanes[lane], d))
+            {
+                return static_cast<T>(lanes[lane]);
+            }
+        }
+        return static_cast<T>(undefined);
+    }
 
 private:
 
@@ -97,6 +96,7 @@ private:
     VehicleData mMyAV; ///< Instance of my autonomous vehicle
 
     Highway mHighway; ///< Highway representation
+    
 };
 
 #endif // SENSOR_FUSION_H

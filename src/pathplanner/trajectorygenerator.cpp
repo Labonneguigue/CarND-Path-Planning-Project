@@ -2,12 +2,13 @@
 #include "spline.h"
 #include "trajectorygenerator.h"
 
-#define VERBOSE 0
-#define DEBUG 0
+#define VERBOSE 2
 
-TrajectoryGenerator::TrajectoryGenerator(SensorFusion& sensorFusion
-                                         , MapData& mapData)
+TrajectoryGenerator::TrajectoryGenerator(SensorFusion& sensorFusion,
+                                         Predictor& predictor,
+                                         MapData& mapData)
 : mSensorFusion(sensorFusion) //remove if not used
+, mPredictor(predictor)
 , mMapData(mapData)
 , mMajorWayPoints_x(0)
 , mMajorWayPoints_y(0)
@@ -18,8 +19,8 @@ TrajectoryGenerator::TrajectoryGenerator(SensorFusion& sensorFusion
 , mCurrentTargetVelocityMs(mMaximumVelocityMs)
 , mCurrentTargetLane(undefined)
 , mSpeedRegulator()
+, mChangingLane(false)
 {
-    //std::cout << "mCurrentTargetVelocityMs : " << mCurrentTargetVelocityMs << "\n";
     // Initialisation of the PID to regulate the speed when I am following a car
     mSpeedRegulator.init(0.05, 1, 0.0005);
 }
@@ -35,11 +36,77 @@ void TrajectoryGenerator::computeTrajectory(const ControllerFeedback& controller
     // I initialise the path to the remaining one
     initialiseTrajectory(controllerFeedback);
 
+    // If I was changing lane, I check if it is over now
+    if (mChangingLane
+        && !mSensorFusion.highway().ongoingLaneChange(mSensorFusion.myAV().d))
+    {
+        mChangingLane = false;
+    }
+
     // Process the Trajectory Report
     setCurrentTargetVelocity(result.targetSpeedMs);
-    mCurrentTargetLane = result.targetLane;
 
-#if DEBUG
+    if (!mChangingLane){
+
+        bool acceptingNewTargetLane = false;
+
+        if (result.behavior == BehaviorPlanner::keepLane)
+        {
+            mCurrentTargetLane = result.targetLane;
+            setCurrentTargetVelocity(result.targetSpeedMs);
+        }
+        else if (result.behavior == BehaviorPlanner::rightLaneChange
+              || result.behavior == BehaviorPlanner::leftLaneChange)
+        {
+            acceptingNewTargetLane = true;
+        }
+        else if (result.behavior == BehaviorPlanner::prepareLeftLaneChange
+              || result.behavior == BehaviorPlanner::prepareRightLaneChange)
+        {
+            double laneSpeedMs;
+            double timeToInsertion;
+            double recommendedTargetSpeed;
+            mPredictor.getLaneSpeedAndTimeToInsertion(result.targetLane,
+                                                      laneSpeedMs,
+                                                      timeToInsertion,
+                                                      recommendedTargetSpeed);
+
+            if (timeToInsertion <= 0.1)
+            {
+                acceptingNewTargetLane = true;
+                setCurrentTargetVelocity(result.targetSpeedMs);
+            }
+            else
+            {
+                setCurrentTargetVelocity(result.recommendedTargetSpeed);
+            }
+        }
+
+        if (acceptingNewTargetLane)
+        {
+            if (result.targetLane > mCurrentTargetLane)
+            {
+                if (mPredictor.canIChangeLane(static_cast<Lane>(mCurrentTargetLane + 1), mSensorFusion.myAV().s))
+                {
+                    mCurrentTargetLane = static_cast<Lane>(mCurrentTargetLane + 1);
+                }
+            }
+            else if (result.targetLane < mCurrentTargetLane)
+            {
+                if (mPredictor.canIChangeLane(static_cast<Lane>(mCurrentTargetLane - 1), mSensorFusion.myAV().s))
+                {
+                    mCurrentTargetLane = static_cast<Lane>(mCurrentTargetLane - 1);
+                }
+            }
+            mChangingLane = true;
+        }
+    }
+
+#if VERBOSE > 2
+    std::cout << "Result.targetLane: " << result.targetLane << "  Target lane : " << mCurrentTargetLane << "\n";
+#endif
+
+#if VERBOSE > 0
     std::cout << "TrajectoryGenerator targets : speed \t" << mCurrentTargetVelocityMs << "\tlane :\t" << mCurrentTargetLane << "\n'";
 #endif
 
@@ -48,21 +115,18 @@ void TrajectoryGenerator::computeTrajectory(const ControllerFeedback& controller
     for (double wp = step; wp <= 3*step ; wp+= step)
     {
         std::vector<double> next_wp = utl::getXY<double>(mSensorFusion.myAV().s + wp,
-                                                         Highway::getDFromLane<double>(mCurrentTargetLane),
+                                                         mSensorFusion.highway().getDFromLane<double>(mCurrentTargetLane),
                                                          mMapData.waypoints_s,
                                                          mMapData.waypoints_x,
                                                          mMapData.waypoints_y);
         mMajorWayPoints_x.push_back(next_wp[0]);
         mMajorWayPoints_y.push_back(next_wp[1]);
-
-        /*  std::cout << wp << " " << majorWayPoints_x[majorWayPoints_x.size()-1]
-         << " " << majorWayPoints_y[majorWayPoints_y.size()-1] << "\n";*/
     }
 
     // Once I have my sparse trajectory made of waypoints, I change the
     // frame of reference so that the car is a (0, 0, 0).
     const double target_yaw = 0;
-    for (int wp = 0 ; wp<mMajorWayPoints_x.size() ; ++wp)
+    for (unsigned int wp = 0U ; wp<mMajorWayPoints_x.size() ; ++wp)
     {
         double shift_x = mMajorWayPoints_x[wp] - mEndPathCar.x;
         double shift_y = mMajorWayPoints_y[wp] - mEndPathCar.y;
@@ -111,7 +175,9 @@ void TrajectoryGenerator::computeTrajectory(const ControllerFeedback& controller
         {
             if (utl::distance(nextWayPoint_x, nextWayPoint_y, next_x[next_x.size()-1], next_y[next_y.size()-1]) > 0.5)
             {
+#if VERBOSE > 0
                 std::cout << "WARNING : " << utl::distance(nextWayPoint_x, nextWayPoint_y, next_x[next_x.size()-1], next_y[next_y.size()-1]) << "\n";
+#endif
             }
         }
 
@@ -177,7 +243,7 @@ void TrajectoryGenerator::initialiseTrajectory(const ControllerFeedback& control
 
     }
 
-#if VERBOSE
+#if VERBOSE > 2
     std::cout << mMajorWayPoints_x[mMajorWayPoints_x.size()-2] << " " << mMajorWayPoints_y[mMajorWayPoints_y.size()-2] << "\n";
     std::cout << mMajorWayPoints_x[mMajorWayPoints_x.size()-1] << " " << mMajorWayPoints_y[mMajorWayPoints_y.size()-1] << "\n";
 #endif
@@ -189,23 +255,23 @@ void TrajectoryGenerator::initialiseTrajectory(const ControllerFeedback& control
 
 void TrajectoryGenerator::computeStepSpeed()
 {
-    //std::cout << "Previous speed : " << mMyAVSpeedAtEndOfPlannedPathMs;
-
     assert(mEndPathCar.speedMs >= 0.0);
 
     double distanceCarAhead;
     double speedCarAhead;
-    mSensorFusion.getDistanceAndSpeedCarAhead( distanceCarAhead
-                                             , speedCarAhead);
-
     double pidCorrectedSpeed = 0.0;
-    if (distanceCarAhead < policy::safeDistance * 1.5)
+
+    if (mPredictor.getDistanceAndSpeedCarAhead(distanceCarAhead,
+                                           speedCarAhead))
     {
-        // I compute the Distance Error as the delta between the optimal
-        // safe distance and the actual distance between us
-        double deltaDistance = policy::safeDistance - distanceCarAhead;
-        mSpeedRegulator.updateError(deltaDistance);
-        pidCorrectedSpeed = mSpeedRegulator.totalError();
+        if (distanceCarAhead < policy::safeDistance * 1.5)
+        {
+            // I compute the Distance Error as the delta between the optimal
+            // safe distance and the actual distance between us
+            double deltaDistance = policy::safeDistance - distanceCarAhead;
+            mSpeedRegulator.updateError(deltaDistance);
+            pidCorrectedSpeed = mSpeedRegulator.totalError();
+        }
     }
 
     double appliedSpeed = mCurrentTargetVelocityMs + pidCorrectedSpeed;
@@ -228,5 +294,8 @@ void TrajectoryGenerator::computeStepSpeed()
     }
 
     assert(mEndPathCar.speedMs <= policy::maxSpeedMs);
-    //std::cout << " Updated speed : " << mMyAVSpeedAtEndOfPlannedPathMs << " current target velocity : " << mCurrentTargetVelocityMs << "\n";
+    std::cout << " Updated speed : "
+              << mEndPathCar.speedMs
+              << " current target velocity : "
+              << mCurrentTargetVelocityMs << "\n";
 }

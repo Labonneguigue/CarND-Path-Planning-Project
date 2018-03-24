@@ -48,7 +48,7 @@ public:
 private:
 
     BehaviorPlanner& mBehaviorPlanner; ///< BehaviorPlanner instance allowing construction of optimal trajectory
-    Predictor mPredictor;
+    Predictor& mPredictor;
     TrajectoryGenerator& mTrajectoryGenerator; ///< TrajectoryGenerator computes optimal trajectory waypoints
 
     BehaviorPlanner::HighLevelTrajectoryReport mResult;

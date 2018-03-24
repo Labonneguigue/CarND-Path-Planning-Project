@@ -47,7 +47,7 @@ const std::string Entry::getName()
     return mName;
 }
 
-const double Entry::getCount()
+double Entry::getCount()
 {
     return mNumberCalls;
 }

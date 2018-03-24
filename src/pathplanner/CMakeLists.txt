@@ -6,6 +6,20 @@ add_library(pathplanner
         trajectorygenerator.cpp
         predictor.cpp
         sensorfusion.cpp
+        # headers
+        include/behaviorplanner.h
+        include/controllerfeedback.h
+        include/drivingpolicy.h
+        include/mapdata.h
+        include/pathplanner.h
+        include/PID.h
+        include/predictor.h
+        include/roadtypes.h
+        include/sensorfusion.h
+        include/spline.h
+        include/trajectorygenerator.h
+        include/utl.h
+        include/vehicledata.h
     )
 
 target_compile_features(pathplanner
@@ -24,9 +38,10 @@ target_include_directories(pathplanner
 # Path Planner Test Library
 
 add_executable(pathplanner_tests
-        tests/main_tests.cpp
         tests/behaviorplanner_tests.cpp
         tests/highway_tests.cpp
+        tests/main_tests.cpp
+        tests/predictor_tests.cpp
         tests/sensorfusion_tests.cpp
         tests/utl_tests.cpp
     )

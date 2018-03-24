@@ -13,8 +13,9 @@ class TrajectoryGenerator
 {
 public:
 
-    TrajectoryGenerator( SensorFusion& sensorFusion
-                       , MapData& mapData );
+    TrajectoryGenerator(SensorFusion& sensorFusion,
+                        Predictor& predictor,
+                        MapData& mapData );
 
     ~TrajectoryGenerator();
 
@@ -67,7 +68,7 @@ private:
 private:
 
     SensorFusion& mSensorFusion; ///< Reference to the sensor fusion database
-
+    Predictor& mPredictor; ///< Reference to the Prediction module
     MapData& mMapData; ///< Data relative to the simulation map in the simulator
 
     // Vector of widely spaced waypoints to be interpolated with a spline
@@ -89,6 +90,9 @@ private:
 
     PID<float> mSpeedRegulator;
 
+    bool mChangingLane; ///< Ongoing lane change flag - Might still be within threshold on departing lane
+    bool mInBetweenLane; ///< Flag to show that my car is effectivelly in-between lanes
+    
     static constexpr double mMaximumAccelerationMs = policy::getSafePolicy(policy::maxAccelerationMs); ///< Maximum allowed acceleration in m/s^2 @note 10 m/s is the required max
     static constexpr const double mSimulatorWaypointsDeltaT = policy::simulatorDeltaT;
     static constexpr const double mMaximumSpeedIncrement = mSimulatorWaypointsDeltaT * mMaximumAccelerationMs;

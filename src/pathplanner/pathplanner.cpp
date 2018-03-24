@@ -19,26 +19,26 @@ void PathPlanner::solvePath(ControllerFeedback controllerFeedback,
                             std::vector<double>& next_y){
 
     // I update to Predictor to build an up-to-date representation of the surroundings
-    mPredictor.prepareSensorDataForPrediction();
-
     // I check if there are any warning flags raised, if so I run the Behavior Planner module
     Predictor::Warnings warnings;
     mPredictor.environmentalEvaluation(warnings);
 
     if(warnings.anyWarningRaised)
     {
+#if VERBOSE > 1
         std::cout << "Warnings ! I run my Behavior Planner ...\n";
+#endif
         mResult = mBehaviorPlanner.computeNewTrajectory(warnings);
         mCounter = 0;
     }
     else
     {
         // If no warnings are raised, I run the behavior only once in a while
-        ++mCounter;
-        if (mCounter >= 20)
+        --mCounter;
+        if (mCounter <= 0)
         {
             mResult = mBehaviorPlanner.computeNewTrajectory(warnings);
-            mCounter = 0;
+            mCounter = 20;
         }
     }
 

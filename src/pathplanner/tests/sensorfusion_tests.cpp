@@ -3,6 +3,7 @@
 #include <vector>
 #include "gtest/gtest.h"
 
+#include "drivingpolicy.h"
 #include "roadtypes.h"
 #include "sensorfusion.h"
 
@@ -27,38 +28,63 @@ public:
     
 };
 
-TEST_F(SensorFusionTest, GET_DISTANCE_AND_SPEED_CAR_AHEAD)
+TEST_F(SensorFusionTest, CarsOrderedAfterUpdate)
 {
-    std::vector<std::vector<double>> sensorData;
-    const double vehicles_d = 6.0;
-    const double myAV_d = 10.0;
-    const double interCarDistance = 30.0;
+    // TESTSTEP: Creation of a few cars.
+    // EXPECTED: I expect the cars to be sorted by ascending id.
 
-    mSensorFusion.updateMyAVData(0, 0, myAV_d, vehicles_d, 0, 0);
-    mSensorFusion.updateCarsData(sensorData);
+    std::vector<std::vector<double>> sensorFusionData;
+    double id = 0.0;
+    double x = 0.0;
+    double y = 0.0;
+    double x_dot = 15.0;
+    double y_dot = 0.0;
+    double s = 20.0;
 
-    double distance;
-    double speed;
+    double d = mSensorFusion.highway().getDFromLane<double>(firstLane);
+    std::vector<double> leftCar = {id++,x, y, x_dot, y_dot, s, d, firstLane};
 
-    bool success = mSensorFusion.getDistanceAndSpeedCarAhead(distance, speed);
+    d = mSensorFusion.highway().getDFromLane<double>(thirdLane);
+    std::vector<double> rightCar = {id++,x, y, x_dot, y_dot, s, d, thirdLane};
 
-    ASSERT_FALSE(success);
+    d = mSensorFusion.highway().getDFromLane<double>(secondLane);
+    std::vector<double> carAhead = {id++,x, y, x_dot, y_dot, s + 30, d, secondLane};
 
-    std::vector<double> someCar;
-    someCar.push_back(0); // id
-    someCar.push_back(0); // x
-    someCar.push_back(0); // y
-    someCar.push_back(0); // x_dot
-    someCar.push_back(0); // y_dot
-    someCar.push_back(myAV_d + interCarDistance); // s
-    someCar.push_back(vehicles_d); // d
-    sensorData.push_back(someCar);
+    sensorFusionData.push_back(carAhead);
+    sensorFusionData.push_back(leftCar);
+    sensorFusionData.push_back(rightCar);
 
-    mSensorFusion.updateCarsData(sensorData);
+    mSensorFusion.updateCarsData(sensorFusionData);
 
-    success = mSensorFusion.getDistanceAndSpeedCarAhead(distance, speed);
+    const std::vector<DetectedVehicleData> detectedVehicles = mSensorFusion.detectedCars();
 
-    ASSERT_TRUE(success);
-    ASSERT_DOUBLE_EQ(distance, interCarDistance);
-    ASSERT_DOUBLE_EQ(speed, 0.0);
+    int previousId = 0;
+    for (int car = 0 ; car < detectedVehicles.size() ; ++car)
+    {
+        if (car != 0)
+        {
+            ASSERT_GT(detectedVehicles[car].id, previousId);
+        }
+        previousId = detectedVehicles[car].id;
+    }
+
+    sensorFusionData.clear();
+
+    sensorFusionData.push_back(rightCar);
+    sensorFusionData.push_back(leftCar);
+    sensorFusionData.push_back(carAhead);
+
+    mSensorFusion.updateCarsData(sensorFusionData);
+    const std::vector<DetectedVehicleData> lastDetectedVehicles = mSensorFusion.detectedCars();
+
+    previousId = 0;
+    for (int car = 0 ; car < lastDetectedVehicles.size() ; ++car)
+    {
+        if (car != 0)
+        {
+            ASSERT_GT(lastDetectedVehicles[car].id, previousId);
+        }
+        previousId = lastDetectedVehicles[car].id;
+    }
 }
+

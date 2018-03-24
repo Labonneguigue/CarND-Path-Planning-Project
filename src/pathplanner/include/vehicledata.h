@@ -103,7 +103,7 @@ struct DetectedVehicleData : public VehicleData
                         double s,
                         double d,
                         Lane lane_)
-    : VehicleData(x, y, s, d, 0.0, 0.0, lane_)
+    : VehicleData(x, y, s, d, 0.0, utl::distance(x_dot, y_dot, 0.0, 0.0), lane_)
     , id(id)
     , x_dot(x_dot)
     , y_dot(y_dot)
@@ -131,7 +131,7 @@ struct DetectedVehicleData : public VehicleData
         y = y_;
         x_dot = x_dot_;
         y_dot = y_dot_;
-        speedMs = utl::distance(x_dot_, y_dot, 0.0, 0.0);
+        speedMs = utl::distance(x_dot, y_dot, 0.0, 0.0);
         s_dot = (s_ - s) / (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - lastUpdateTimeStamp).count() * 1000000);
         s = s_;
         d_dot = (d_ - d) / (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - lastUpdateTimeStamp).count() * 1000000);
@@ -142,14 +142,15 @@ struct DetectedVehicleData : public VehicleData
         if (d_dot > d_dotThreshold)
         {
             // change to ternary operator once threshold fine tuned
-            std::cout << "Car " << id << " is changing lane.\n";
+#if VERBOSE > 0
+            std::cout << " # # # \t Car " << id << " is changing lane.\n";
+#endif
             isChangingLane = true;
         }
         else
         {
             isChangingLane = false;
         }
-        
         print();
     }
 
@@ -167,17 +168,20 @@ struct DetectedVehicleData : public VehicleData
      */
     void print() const
     {
+#if VERBOSE > 2
         std::cout<< "Vehicle " << id << " x:" << x << " y:" << y << " speed [m/s]:" << speedMs
                  << " x_dot: " << x_dot << " y_dot" << y_dot << " s:" << s << " d:" << d
                  << " d_dot:" << d_dot << " lane:" << lane << "\n";
+#endif
     }
 
-    /** Implementation of the operator< to enable sorting
-     *
+    /** Implementation of the operator< to enable sorting by position
+     *  on the road.
      */
     bool operator < (const DetectedVehicleData& car) const
     {
-        return (id < car.id);
+        return (s < car.s);
+        //return (id < car.id);
     }
 
 };

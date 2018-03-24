@@ -4,6 +4,8 @@
 #include "sensorfusion.h"
 #include "drivingpolicy.h"
 
+#define VERBOSE 1
+
 SensorFusion::SensorFusion()
 : mCars()
 , mCarAhead(nullptr)
@@ -17,28 +19,31 @@ SensorFusion::~SensorFusion()
 void SensorFusion::updateCarsData(std::vector<std::vector<double>>& sensordata)
 {
     if (mCars.empty()){
-        for (int car = 0 ; car < sensordata.size() ; ++car)
+        for (unsigned int car = 0 ; car < sensordata.size() ; ++car)
         {
-            mCars.push_back(DetectedVehicleData(sensordata[car][0],
-                                                sensordata[car][1],
-                                                sensordata[car][2],
-                                                sensordata[car][3],
-                                                sensordata[car][4],
-                                                sensordata[car][5],
-                                                sensordata[car][6],
-                                                getVehicleLane(sensordata[car][6])));
+            mCars.push_back(DetectedVehicleData(sensordata[car][0], // id
+                                                sensordata[car][1], // x
+                                                sensordata[car][2], // y
+                                                sensordata[car][3], // x_dot
+                                                sensordata[car][4], // y_dot
+                                                sensordata[car][5], // s
+                                                sensordata[car][6], // d
+                                                getVehicleLane<Lane>(sensordata[car][6])));
         }
-        std::sort(mCars.begin(), mCars.end());
+        std::sort(mCars.begin(), mCars.end(), [](const DetectedVehicleData& lhs, const DetectedVehicleData& rhs)
+        {
+            return lhs.id < rhs.id;
+        });
     }
     else
     {
-        for (int newData = 0 ; newData < sensordata.size() ; ++newData)
+        for (unsigned int newData = 0 ; newData < sensordata.size() ; ++newData)
         {
             bool found = false;
             // Since the previous records are sorted, I don't have to iterate through the whole set of cars.
-            for (int previousRecord = 0 ; ((mCars[previousRecord].id <= sensordata[newData][0]) &&
-                                           (previousRecord < mCars.size()) &&
-                                           (!found)) ; ++previousRecord)
+            for (unsigned int previousRecord = 0 ;
+                 ((mCars[previousRecord].id <= sensordata[newData][0]) &&
+                  (previousRecord < mCars.size()) && (!found)) ; ++previousRecord)
             {
                 if (mCars[previousRecord].id == sensordata[newData][0])
                 {
@@ -49,7 +54,7 @@ void SensorFusion::updateCarsData(std::vector<std::vector<double>>& sensordata)
                                                      sensordata[newData][4],
                                                      sensordata[newData][5],
                                                      sensordata[newData][6],
-                                                     getVehicleLane(sensordata[newData][6]));
+                                                     getVehicleLane<Lane>(sensordata[newData][6]));
                     found = true;
                 }
             }
@@ -63,12 +68,15 @@ void SensorFusion::updateCarsData(std::vector<std::vector<double>>& sensordata)
                                                     sensordata[newData][4],
                                                     sensordata[newData][5],
                                                     sensordata[newData][6],
-                                                    getVehicleLane(sensordata[newData][6])));
-
+                                                    getVehicleLane<Lane>(sensordata[newData][6])));
             }
         }
         // Finish merging, I sort it for next time
-        std::sort(mCars.begin(), mCars.end());
+        //std::sort(mCars.begin(), mCars.end());
+        std::sort(mCars.begin(), mCars.end(), [](const DetectedVehicleData& lhs, const DetectedVehicleData& rhs)
+                  {
+                      return lhs.id < rhs.id;
+                  });
     }
 }
 
@@ -80,60 +88,21 @@ void SensorFusion::updateMyAVData(double x_,
                                   double speedmph)
 {
     const double speedms = utl::mph2ms(speedmph);
-    //std::cout << "Update of the car speed ms : " << speedms << "\n";
-    mMyAV.updateData(x_, y_, s_, d_, yaw_, speedms, getVehicleLane(d_));
+    mMyAV.updateData(x_, y_, s_, d_, yaw_, speedms, getVehicleLane<Lane>(d_));
 }
 
 const std::vector<DetectedVehicleData> SensorFusion::detectedCars() const
 {
     std::vector<DetectedVehicleData> recentlyDetectedCars;
-    for (int car=0; car < mCars.size() ; ++car)
+    for (const DetectedVehicleData car : mCars)
     {
-        if (mCars[car].hasBeenUpdatedRecently())
+        if (car.hasBeenUpdatedRecently())
         {
-            recentlyDetectedCars.push_back(mCars[car]);
+            recentlyDetectedCars.push_back(car);
         }
     }
+#if VERBOSE > 2
+    std::cout << "Size of recently detected cars : " << recentlyDetectedCars.size() << "\n";
+#endif
     return recentlyDetectedCars;
-}
-
-bool SensorFusion::getDistanceAndSpeedCarAhead(double& distance,
-                                               double& speed)
-{
-    bool found = false;
-    distance = policy::detectionDistance;
-    speed = std::numeric_limits<double>::max();
-    for (int car = 0; car < mCars.size() ; car++)
-    {
-        // If the car is in my lane and its s is greater than mine,
-        // I consider it
-        if (Highway::isCarInLane<double>(mMyAV.lane, mCars[car].d) &&
-            (mCars[car].s > mMyAV.s))
-        {
-            // If the distance between us is smaller that previously
-            // recorded, it becomes the closest car to me.
-            if ((mCars[car].s - mMyAV.s) < distance)
-            {
-                distance = mCars[car].s - mMyAV.s;
-                speed = sqrt(utl::sqr(mCars[car].x_dot) + utl::sqr(mCars[car].y_dot));
-                found = true;
-                assert(distance > 0);
-                std::cout << " ** Distance car ahead " << mCars[car].id << " is " << speed << "\n";
-            }
-        }
-    }
-    return found;
-}
-
-Lane SensorFusion::getVehicleLane(const double d) const
-{
-    std::vector<Lane> lanes = mHighway.getAvailableLanes();
-    for (int lane = 0; lane < lanes.size() ; ++lane)
-    {
-        if (Highway::isCarInLane<double>(lanes[lane], d))
-        {
-            return lanes[lane];
-        }
-    }
-    return undefined;
 }

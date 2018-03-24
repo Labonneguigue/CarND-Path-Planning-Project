@@ -3,13 +3,15 @@
 
 #include "utl.h"
 
+#define VERBOSE 2
+
 namespace policy
 {
     constexpr static const bool keepRightLane = false; ///< False: US, True: EU
 
     constexpr static const int defaultNbLanes = 3; ///< Default number of lanes on the road at startup time
     constexpr static const int safeDistance = 10; ///< Safe distance to always (try to) keep between cars.
-    constexpr static const double detectionDistance = 35.0; ///< Distance at which behavior needs to start be modified
+    constexpr static const int detectionDistance = 3 * safeDistance; ///< Range within which cars are considered for Behavior Planning
     constexpr static const double maxSpeedMph = 50.0; ///< Maximum allowed speed in mph
     constexpr static const double maxSpeedMs = utl::mph2ms(maxSpeedMph); ///< Maximum allowed speed in m/s
     constexpr static const double maxAccelerationMs = 10.0; ///< Maximum allowed acceleration in m/s^2

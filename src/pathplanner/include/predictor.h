@@ -54,7 +54,7 @@ public:
      * @param[out] warnings Warnings raised if a car is crossing my path of if a slow moving car is ahead in my lane
      *
      */
-    void environmentalEvaluation(Warnings& warnings) const;
+    void environmentalEvaluation(Warnings& warnings);
 
     /**
      *
@@ -71,29 +71,56 @@ public:
      * @param[in] lane Lane I want to know the speed of
      * @param[out] laneSpeedMs The speed of the lane in meters / second
      * @param[out] timeToInsertionS Time to wait in lane before changing in seconds
+     * @param[out] recommendedSpeedMs Speed to target to achieve insertion
+     *
      */
     void getLaneSpeedAndTimeToInsertion(const int lane,
                                         double& laneSpeedMs,
-                                        double& timeToInsertionS) const;
+                                        double& timeToInsertionS,
+                                        double& recommendedSpeedMs) const;
+
+    /** Returns true if my car can change to specified lane given at certain position
+     *
+     * @param[in] targetLane Lane targeted for the lane change
+     * @param[in] positionS  Current position of the vehicle (S frenet)
+     *
+     * @return True if changing lane immediatelly is safe, False otherwise
+     */
+    bool canIChangeLane(const Lane targetLane, const double positionS);
 
     /**
      *
      */
-    const bool isCarTooFarBehind(const DetectedVehicleData car) const;
+    inline static bool isThisCarBlockingMe(const DetectedVehicleData car,
+                                                 const double positionS)
+    {
+        return ( (car.s < (positionS + policy::safeDistance))
+              && (car.s > (positionS - policy::safeDistance)) ) ? true : false;
+    }
 
-    /**
+    /** Detects whether there is a car ahead or not, if it is the case
+     *  the distance to that car is returned in the variable distance as
+     *  well as its speed. The closest car is returned if multiple cars are
+     *  detected ahead of us in the current lane.
      *
+     * @note The number of the lane of myAV and its s Frenet coordinate are used
+     *       to compute the following results
+     *
+     * @param[out] distance Distance to the car in front. max double if no car found
+     * @param[out] speed Speed to the car in front. max double if no car found
+     *
+     * @return True if vehicle is ahead and the data in distance is correct, False otherwise
      */
-    const bool isCarTooFarAhead(const DetectedVehicleData car) const;
-
+    bool getDistanceAndSpeedCarAhead(double& distance,
+                                                double& speed);
 
 private:
 
     SensorFusion& mSensorFusion; ///< Instance of the Prediction sub-system
-    std::vector<DetectedVehicleData> mNearbyCars; /// Cars that are worth being taken into consideration when it comes to planning the trajectory
+    VehicleData& mMyAV; ///< Reference to the representation of myAV in SensorFusion
+    std::vector<std::vector<DetectedVehicleData>> mCarsByLane; /// Cars that are worth being taken into consideration when it comes to planning the trajectory sorted by lanes
 
     constexpr static const double mMaximumAccelerationMs = policy::getSafePolicy(policy::maxAccelerationMs); ///< Maximum allowed acceleration in m/s^2 @note 10
-    constexpr static const double mMaximumDetectionDistance = 80.0; ///< Distance below which I start to consider cars as being close and consider them into the Bahavior Planning task
 };
 
 #endif //PREDICTOR_H

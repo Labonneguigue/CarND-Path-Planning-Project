@@ -1,5 +1,3 @@
-enable_testing()
-
 add_subdirectory(pathplanner)
 add_subdirectory(profiler)
 

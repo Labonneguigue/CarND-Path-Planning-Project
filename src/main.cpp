@@ -36,9 +36,15 @@ int main() {
 
     ofstream profilerOutputFile;
 
+#define XCODE
 #ifdef XCODE
+    // Waypoint map to read from
+    // It is relatively located differently when compiled using cmake .. && make
+    // or when Xcode compiles the path_planning executable (I added a -DXCODE flag)
+    string map_file_ = "../../../data/highway_map.csv";
     profilerOutputFile.open("../../../profiler_output/codeprofile.txt");
 #else
+    string map_file_ = "../data/highway_map.csv";
     profilerOutputFile.open("../../profiler_output/codeprofile.txt");
 #endif
 
@@ -50,7 +56,7 @@ int main() {
     SensorFusion sensorFusion = SensorFusion();
     Predictor predictor = Predictor(sensorFusion);
     BehaviorPlanner behaviorPlanner = BehaviorPlanner(predictor, sensorFusion);
-    TrajectoryGenerator trajectoryGenerator = TrajectoryGenerator(sensorFusion, mapData);
+    TrajectoryGenerator trajectoryGenerator = TrajectoryGenerator(sensorFusion, predictor, mapData);
     PathPlanner pathPlanner = PathPlanner(behaviorPlanner, predictor, trajectoryGenerator);
 
 
@@ -60,15 +66,6 @@ int main() {
     std::vector<double> map_waypoints_s;
     std::vector<double> map_waypoints_dx;
     std::vector<double> map_waypoints_dy;
-
-    // Waypoint map to read from
-    // It is relatively located differently when compiled using cmake .. && make
-    // or when Xcode compiles the path_planning executable (I added a -DXCODE flag)
-#ifdef XCODE
-    string map_file_ = "../../../data/highway_map.csv";
-#else
-    string map_file_ = "../data/highway_map.csv";
-#endif
 
     // The max s value before wrapping around the track back to 0
     double max_s = 6945.554;

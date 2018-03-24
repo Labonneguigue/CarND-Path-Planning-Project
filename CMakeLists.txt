@@ -5,7 +5,7 @@ project(Path_Planning VERSION 1.0.0 LANGUAGES CXX)
 if(MSVC)
 	#add_compile_options(/W3 /WX)
 else()
-	add_compile_options()#-W -Wall -Werror
+	add_compile_options(-W -Wall)# -Werror
 endif()
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
@@ -30,5 +30,7 @@ target_link_libraries(path_planning
 		uv
 		uWS
 	)
+
+enable_testing()
 
 add_subdirectory(src)

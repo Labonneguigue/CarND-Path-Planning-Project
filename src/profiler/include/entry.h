@@ -19,7 +19,7 @@ public:
 
     const std::string getName();
 
-    const double getCount();
+    double getCount();
 
     void print(std::ostream& outputStream);
 

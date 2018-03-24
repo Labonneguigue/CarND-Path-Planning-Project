@@ -18,6 +18,7 @@ enum Lane
     thirdLane = 2
 };
 
+
 /** Highway structure represents a highway and provide
  *  convenient way to obtain information about the other
  *  available lanes given the current lane.
@@ -30,13 +31,15 @@ struct Highway
 
     /** Constructor
      *
-     * @param[in] nbLanes Number of lanes on the current highway
+     * @param[in] nbLanes Number of lanes on the current highway.
      *
      * @note Each lanes has an incrementing number starting a 0 for
-     *       the leftmost lane (Assume right lane driving)
+     *       the leftmost lane (Assume right lane driving).
+     *       Default number of lanes is 0.
      */
-    Highway(const int nbLanes)
-    : lanes()
+    Highway(const int nbLanes = 1)
+    : mLanes()
+    , mLaneWidth(4.0)
     {
         setNumberLanes(nbLanes);
     }
@@ -45,9 +48,9 @@ struct Highway
      *
      * @return Number of lanes on the road
      */
-    const int getNumberLanes() const
+    int getNumberLanes() const
     {
-        return lanes.size();
+        return mLanes.size();
     }
 
     /** Returns the lane number of each lane on this road
@@ -56,7 +59,23 @@ struct Highway
      */
     const std::vector<Lane> getAvailableLanes() const
     {
-        return lanes;
+        return mLanes;
+    }
+
+    /** Return true if the car undertaking a lane change,
+     *  false otherwise
+     *
+     * @param[in] vehicle_d D coordinate of the car
+     *
+     */
+    inline bool ongoingLaneChange(double vehicle_d) const
+    {
+        const double laneChangeOverThreshold = mLaneWidth * 0.25;
+        for (unsigned int lane = 0 ; lane < mLanes.size() ; ++lane)
+        {
+            if (isCarInLane(mLanes[lane], vehicle_d, laneChangeOverThreshold)) return false;
+        }
+        return true;
     }
 
     /** Changes dynamically the size of the road to adapt to another
@@ -67,14 +86,14 @@ struct Highway
      */
     void setNumberLanes(const int nbLanes)
     {
-        lanes.clear();
+        mLanes.clear();
 
         for (int lane = 0; lane < nbLanes ; ++lane)
         {
-            lanes.push_back(static_cast<Lane>(lane));
+            mLanes.push_back(static_cast<Lane>(lane));
         }
 
-        assert(lanes.size() > 0);
+        assert(mLanes.size() > 0);
     }
 
     /** Returns delta in number of lane to each available lanes on this road
@@ -86,13 +105,13 @@ struct Highway
     const std::vector<Lane> getDeltaToAvailableLanes(const Lane currentLane) const
     {
         // Can't be in another lane than the one represented by this struct
-        assert(currentLane < lanes.size());
+        assert(static_cast<unsigned int>(currentLane) < mLanes.size());
         assert(currentLane >= 0);
 
         std::vector<Lane> deltaLanes;
-        for (int lane = 0; lane < lanes.size() ; ++lane)
+        for (unsigned int lane = 0; lane < mLanes.size() ; ++lane)
         {
-            deltaLanes.push_back(static_cast<Lane>(lanes[lane]-currentLane));
+            deltaLanes.push_back(static_cast<Lane>(mLanes[lane]-currentLane));
         }
         return deltaLanes;
     }
@@ -104,11 +123,9 @@ struct Highway
      @return d Frenet component
      */
     template <typename T>
-    static T getDFromLane(Lane laneNumber)
+    T getDFromLane(Lane laneNumber) const
     {
-        static const T laneWidth = 4;
-        static const T laneBias = 2;
-        return (laneBias + (laneWidth * laneNumber));
+        return ((mLaneWidth/2.0) + (mLaneWidth * static_cast<T>(laneNumber)));
     }
 
     /**
@@ -120,17 +137,18 @@ struct Highway
 
      @tparam T type of the othercar_d frenet coordinate
      */
-    template <typename T>
-    static bool isCarInLane(Lane lane, T d)
+    bool isCarInLane(const Lane lane, const double d, double window = -1) const
     {
-        static const int halfLaneWidth = 2;
-        return ((d < (getDFromLane<T>(lane) + halfLaneWidth)) &&
-                (d > (getDFromLane<T>(lane) - halfLaneWidth))) ? true : false;
+        if (window == -1) window = (mLaneWidth / 2.0);
+        return ((d < (getDFromLane<double>(lane) + window)) &&
+                (d > (getDFromLane<double>(lane) - window))) ? true : false;
     }
 
-    std::vector<Lane> lanes; ///< vector representing the lanes. Each integer is the lane number
+    std::vector<Lane> mLanes; ///< vector representing the lanes. Each integer is the lane number
+    double mLaneWidth; ///< Lane width in meters - Can be changed dynamically when the car changes road
 
-    constexpr const static Lane initialLane = secondLane; ///< Hardcoded initial lane for initialisation
+    constexpr const static Lane mInitialLane = secondLane; ///< Hardcoded initial lane for initialisation
+
 };
 
 

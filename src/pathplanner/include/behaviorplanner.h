@@ -28,17 +28,19 @@ public:
      */
     struct HighLevelTrajectoryReport
     {
-        Behavior behavior;
-        double targetSpeedMs;
-        Lane targetLane;
-        double timeToInsertion;
-        bool warningTriggered;
+        Behavior behavior; ///< Type of behavior to adopt
+        double targetSpeedMs; ///< Optimal speed to reach target
+        Lane targetLane; ///< Goal lane for each reports
+        double timeToInsertion; ///< Estimation of the time it'll take before possible lane change
+        double recommendedTargetSpeed; ///< Speed to adopt for optimal & quick lane change
+        bool warningTriggered; ///< Whether or not the Behavior Planner has been triggered by a warning
 
         HighLevelTrajectoryReport()
         : behavior(keepLane)
         , targetSpeedMs(policy::getSafePolicy(policy::maxSpeedMs))
         , targetLane(secondLane)
         , timeToInsertion(0.0)
+        , recommendedTargetSpeed(0.0)
         , warningTriggered(false)
         {}
     };
@@ -60,12 +62,12 @@ public:
      * @return Trajectory decision
      *
      */
-    const BehaviorPlanner::HighLevelTrajectoryReport computeNewTrajectory(Predictor::Warnings warnings);
+    const BehaviorPlanner::HighLevelTrajectoryReport computeNewTrajectory(Predictor::Warnings warnings = Predictor::Warnings());
 
     /** Function evaluates the cost to choose each possible trajectory
      *
      * @param[in] currentLane The current lane myAV is on
-     * @param[in] currentSpeed The current myAV speed
+     * @param[in] currentSpeedMs The current myAV speed
      * @param[in] targetLane The target lane for which the cost is evaluated
      * @param[in] timeToInsertion The time to wait before changing lane
      *
@@ -75,19 +77,21 @@ public:
      *       the trajectory. The time to insertion differentiate between a laneChange
      *       and a prepareLaneChange type of behavior.
      */
-    double cost(const Lane currentLane,
-                const Lane targetLane,
-                const Lane preferedTargetLane,
-                const double currentSpeed,
-                const Predictor::Warnings& warnings,
-                HighLevelTrajectoryReport& report) const;
+    void cost(const Lane currentLane,
+              const Lane targetLane,
+              const Lane preferedTargetLane,
+              const double currentSpeedMs,
+              const Predictor::Warnings& warnings,
+              std::vector<Lane>& lanes,
+              std::vector<HighLevelTrajectoryReport>& reports,
+              std::vector<double>& costs);
 
     /**
      *
      */
     inline void setWarnings(bool warningLevel)
     {
-        for (int report = 0; report < mResults.size(); ++report)
+        for (unsigned int report = 0; report < mResults.size(); ++report)
         {
             mResults[report].warningTriggered = warningLevel;
         }
