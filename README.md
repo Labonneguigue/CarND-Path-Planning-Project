@@ -68,50 +68,41 @@ That data only contains data about cars on my side of the road.
 
 ### Design
 
-Here is my code architecture that I used to answer this problem.
+Here is my code architecture that I used to answer this problem. There still too many inter-dependencies that I'd like to remove. Ideally, the Path Planner should be the only instance to have knowledge of every modules and each module (Predictor, Trajectory Generator, Sensor Fusion, etc ..) being agnostic of the other.
 
 ![alt text][uml]
 
-##### Modular Highway Model
 
-I designed my algorithm in a modular fashion with the least hardcoded values as possible and as few dependencies as possible. Following this concept, the Behavior Planner module does have to know how many lanes there are on the road. The `Highway` structure keeps track of how many lanes there are on the highway and provides the available lanes number to whoever wants them.
-
-```cpp
-constexpr static const int defaultNbLanes = 3; ///< Default number of lanes on the road at startup time
-```
-
-You'll think it doesn't make much sense in that project but in real life, an AV would likely leave that 3 lanes highway scenario and would need to update its internal representation of the road it is currently on.
-
-```c++
-/** Changes dynamically the size of the road to adapt to another
- *  size of highway
- *
- * @param[in] nbLanes Number of lanes that contains this highway
- *
- */
-void setNumberLanes(const int nbLanes);
-```
+### Modules
 
 #### Behavior Planner
 
 The behavior planner is responsible for issuing general driving decisions like _Stay in Lane_, _Turn Right_ or _Turn Left_.
 
-How it works is by aiming to reach a point on the map far ahead and compute the cost of (read "time to reach that point") changing/staying in each lane. That cost function uses data about the other cars on the road provided by the Sensor Fusion module to decide which lane is the best fit.
+How it works is by aiming to reach a point on the map far ahead and compute the cost of (read "time to reach that point") changing/staying in each lane. That cost function uses data about the other cars on the road provided by the Sensor Fusion module to decide which lane is the best fit. It uses the speed of each lane and computes the time to reach a far target at the speed of each lane.
 
-##### Driving Policy
-
-I added a document `policy.h` collecting many hardcoded values which influence how the car drive.
-In Europe cars are required to keep right when they are not overtaking whereas in the US, the driving policy is more lenient and do not enforce any behavior. I added a boolean flag to enable both driving styles.
-
-```cpp
-constexpr static const bool keepRightLane = false; ///< False: US, True: EU
-```
-
-For now this is a compile time setting but it could easily be modifiable at runtime if the car detected that it crossed the Atlantic. 🌊
+Since the Behavior Planner provides high level decisions that are not always subject to rapid change I reduced its frequency to be ran once in every 20 calls. However I can be woken up by the Predictor if necessary and be ran every frames whenever it is deemed to do so.
 
 #### Trajectory Generator
 
-Special thanks to the [Spline library](http://kluge.in-chemnitz.de/opensource/spline/) that was really useful to generate smooth trajectories!
+**1. Major Waypoints**
+
+First, given the lane I'm targeting to end up in, I generate 3 major path waypoints 50 meters away from each other.
+I also create 2 points very close to my position which reflect the current orientation of my car. More on why I did this bellow...
+
+**2. Spline Generation**
+
+To know how I'm going to reach one point after another, I create a **spline** which runs through these major waypoints. A spline is a polynomial regression that goes exactly through each and every points that are given to it. Since I create these 2 points where my car is at, the generated spline will be tangent to my current trajectory and won't create too much jerk or acceleration.
+
+**3. Subsampling**
+
+Since the simulator expects me to provide him the position of where I want my car to every 0.02 seconds, I must subsample intermediate points onto the generated spline. I do so knowing that the distance between the sample will determine my speed.
+
+**4. Reuse of previous Trajectory**
+
+Lastly, since I provide to the simulator more points than are executed at each steps, some waypoints remain. To save computation time, I reuse the previous points and only top the trajectory up every time. The trick is to keep a representation of my car (position & heading) of how it would be if I reached the end of the trajectory in order to generate the next waypoints in a smooth manner.
+
+Special thanks to the [Spline library](http://kluge.in-chemnitz.de/opensource/spline/) that was really useful to generate smooth trajectories! 👍
 
 ##### Speed Control : PID Controller 🛂
 
@@ -137,6 +128,51 @@ constexpr static const int policy::safeDistance = 10; ///< Safe distance to alwa
 
 #### Predictor
 
+My Predictor module is providing information about the surrounding vehicles. It helps the Trajectory Generator and the Behavior Planner to have access to the data in a more intelligible manner.
+Every iteration, it raises warnings if necessary:
+
+```c++
+void Predictor::environmentalEvaluation(Warnings& warnings) const;
+```
+
+The 2 types of warnings are:
+* Slow car ahead in my current lane
+* A car is changing lane onto mine.
+
+If any warning is raised, the Behavior Planner will be called and it would be its responsibility to assess the full situation and decide what to do.
+
+#### Modular Design
+
+##### Highway Model
+
+I designed my algorithm in a modular fashion with the least hardcoded values as possible and as few dependencies as possible. Following this concept, the Behavior Planner module does have to know how many lanes there are on the road. The `Highway` structure keeps track of how many lanes there are on the highway and provides the available lanes number to whoever wants them.
+
+```cpp
+constexpr static const int defaultNbLanes = 3; ///< Default number of lanes on the road at startup time
+```
+
+You'll think it doesn't make much sense in that project but in real life, an AV would likely leave that 3 lanes highway scenario and would need to update its internal representation of the road it is currently on.
+
+```c++
+/** Changes dynamically the size of the road to adapt to another
+ *  size of highway
+ *
+ * @param[in] nbLanes Number of lanes that contains this highway
+ *
+ */
+void setNumberLanes(const int nbLanes);
+```
+
+##### Driving Policy
+
+I added a document `policy.h` collecting many hardcoded values which influence how the car drive.
+In Europe cars are required to keep right when they are not overtaking whereas in the US, the driving policy is more lenient and do not enforce any behavior. I added a boolean flag to enable both driving styles.
+
+```c++
+constexpr static const bool keepRightLane = false; ///< False: US, True: EU
+```
+
+For now this is a compile time setting but it could easily be modifiable at runtime if the car detected that it crossed the Atlantic. 🌊
 
 ---
 

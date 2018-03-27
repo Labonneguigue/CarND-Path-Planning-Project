@@ -49,7 +49,9 @@ public:
      */
     ~Predictor();
 
-    /**
+    /** Checks myAV surrounding and triggers warnings if necessary
+     *
+     * @param[out] warnings Warnings raised if a car is crossing my path of if a slow moving car is ahead in my lane
      *
      */
     void environmentalEvaluation(Warnings& warnings) const;

@@ -42,9 +42,6 @@ void Predictor::environmentalEvaluation(Predictor::Warnings &warnings) const
             return;
         }
     }
-    int * consistent = new int(5);
-
-    delete consistent;
 }
 
 void Predictor::prepareSensorDataForPrediction()
