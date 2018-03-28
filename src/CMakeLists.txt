@@ -1,12 +1,11 @@
-#project(Path_Planning)
 
 add_subdirectory(pathplanner)
 add_subdirectory(profiler)
-#add_subdirectory(third-party-libraries)
 
 set(MAIN_SOURCES
     main.cpp)
 
+if (TESTING)
 
 set(GOOGLETEST_ROOT googletest/googletest CACHE STRING "Google Test source root")
 
@@ -54,9 +53,8 @@ enable_testing()
 
 add_test(unit ${PROJECT_BINARY_DIR}/unit_tests)
 
+endif()
 
-find_package (Eigen3 3.3 REQUIRED NO_MODULE)
-
-include_directories(${EIGEN3_INCLUDE_DIR} ${pathplanner_SOURCE_DIR})
+include_directories(${pathplanner_SOURCE_DIR})
 
 

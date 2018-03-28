@@ -1,5 +1,6 @@
 #include <limits>
 #include <cassert>
+#include <algorithm>
 #include "sensorfusion.h"
 #include "drivingpolicy.h"
 

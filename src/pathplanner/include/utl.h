@@ -1,6 +1,7 @@
 #ifndef UTL_H
 #define UTL_H
 
+#include <limits>
 #include <math.h>
 #include <string>
 
