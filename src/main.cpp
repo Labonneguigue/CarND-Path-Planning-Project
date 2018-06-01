@@ -5,9 +5,9 @@
 #include <thread>
 #include <vector>
 #include <limits>
-#include "third-party-lib/json.hpp"
+#include "json.hpp"
 #include "utl.h"
-#include "pathplanner.h" // PathPlanner
+#include "pathplanner.h"
 #include "profiler.h"
 
 using namespace std;

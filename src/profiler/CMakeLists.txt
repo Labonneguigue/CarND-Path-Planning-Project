@@ -1,19 +1,33 @@
+# Profiler library
 
-# Bring my headers in the build environment
-include_directories(include)
-
-set(SOURCES
-	# Main Component
-    profiler.cpp
-    include/profiler.h
-	# Structure for individual profiling 
-    entry.cpp
-    include/entry.h
+add_library(profiler
+        profiler.cpp
+        entry.cpp
     )
 
-add_library(profiler STATIC ${SOURCES})
+target_compile_features(profiler
+    PRIVATE
+        cxx_defaulted_move_initializers
+    )
 
 target_include_directories(profiler
-	PUBLIC
-	${PROJECT_SOURCE_DIR}/profiler/include
-	)
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+    PRIVATE
+        ./
+    )
+    
+add_executable(profiler_tests
+        tests/main_tests.cpp
+        tests/profiler_tests.cpp
+    )
+
+target_link_libraries(profiler_tests
+    PRIVATE
+        profiler
+    PUBLIC
+        gtest
+    )
+
+add_test(profiler_tests profiler_tests)

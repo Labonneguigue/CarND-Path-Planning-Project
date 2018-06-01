@@ -1,47 +1,42 @@
-# Set the project name
-#project(pathplanner)
+# Path Planner library
 
-# Bring my headers in the build environment
-include_directories(include)
+add_library(pathplanner
+        pathplanner.cpp
+        behaviorplanner.cpp
+        trajectorygenerator.cpp
+        predictor.cpp
+        sensorfusion.cpp
+    )
 
-# Source variable with a link to all cpp files to compile
-set(SOURCES
-	# Main Component
-    pathplanner.cpp
-    include/pathplanner.h
-	# Behavior Planning sub-component
-    behaviorplanner.cpp
-    include/behaviorplanner.h
-	# Trajectory Generation sub-component
-    trajectorygenerator.cpp
-    include/trajectorygenerator.h
-	# PID used for speed regulation
-    include/PID.h
-	# Prediction sub-component
-    predictor.cpp
-    include/predictor.h
-	# Sensor Fusion sub-component
-    sensorfusion.cpp
-    include/sensorfusion.h
-	# Road types
-    include/roadtypes.h
-	# Drinving Policy
-    include/drivingpolicy.h
-	# Data Structures 
-    include/mapdata.h
-    include/vehicledata.h
-    include/controllerfeedback.h
-	# Helper functions/classes
-    include/spline.h
-    include/utl.h
-)
-
-# Add a library with the above sources
-add_library(pathplanner STATIC ${SOURCES})
+target_compile_features(pathplanner
+    PUBLIC
+        cxx_constexpr
+    )
 
 target_include_directories(pathplanner
     PUBLIC
-    ${PROJECT_SOURCE_DIR}/pathplanner/include
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+    PRIVATE
+        ./
     )
 
-install(TARGETS pathplanner DESTINATION /usr/lib)
+# Path Planner Test Library
+
+add_executable(pathplanner_tests
+        tests/main_tests.cpp
+        tests/behaviorplanner_tests.cpp
+        tests/highway_tests.cpp
+        tests/sensorfusion_tests.cpp
+        tests/utl_tests.cpp
+    )
+
+target_link_libraries(pathplanner_tests
+    PRIVATE
+        pathplanner
+        gtest
+    )
+
+add_test(pathplanner_tests pathplanner_tests)
+
+
