@@ -20,6 +20,12 @@ add_executable(path_planning
 	src/main.cpp
 	)
 
+message("Generator is set to ${CMAKE_GENERATOR}.")
+if (${CMAKE_GENERATOR} STREQUAL "Xcode")
+	target_compile_definitions(path_planning PRIVATE XCODE)
+	message("Preprocessor macro XCODE set.")
+endif()
+
 target_link_libraries(path_planning
 	PRIVATE
 		pathplanner

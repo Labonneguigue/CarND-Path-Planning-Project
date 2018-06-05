@@ -36,7 +36,6 @@ int main() {
 
     ofstream profilerOutputFile;
 
-#define XCODE
 #ifdef XCODE
     // Waypoint map to read from
     // It is relatively located differently when compiled using cmake .. && make
